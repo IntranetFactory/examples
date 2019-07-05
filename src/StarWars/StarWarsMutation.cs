@@ -20,14 +20,14 @@ namespace StarWars
         {
             Name = "Mutation";
 
-            Field<HumanType>(
+            Field<IssueType>(
                 "createHuman",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<HumanInputType>> {Name = "human"}
+                    new QueryArgument<NonNullGraphType<IssueInputType>> {Name = "human"}
                 ),
                 resolve: context =>
                 {
-                    var human = context.GetArgument<Human>("human");
+                    var human = context.GetArgument<Issue>("human");
                     return data.AddHuman(human);
                 });
         }

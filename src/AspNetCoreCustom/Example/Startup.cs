@@ -23,10 +23,10 @@ namespace Example
             services.AddSingleton<StarWarsData>();
             services.AddSingleton<StarWarsQuery>();
             services.AddSingleton<StarWarsMutation>();
-            services.AddSingleton<HumanType>();
-            services.AddSingleton<HumanInputType>();
+            services.AddSingleton<IssueType>();
+            services.AddSingleton<IssueInputType>();
             services.AddSingleton<DroidType>();
-            services.AddSingleton<CharacterInterface>();
+            services.AddSingleton<EntityInterface>();
             services.AddSingleton<EpisodeEnum>();
             services.AddSingleton<ISchema, StarWarsSchema>();
 

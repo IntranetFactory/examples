@@ -3,11 +3,11 @@ using StarWars.Types;
 
 namespace StarWars
 {
-    public class HumanInputType : InputObjectGraphType<Human>
+    public class IssueInputType : InputObjectGraphType<Issue>
     {
-        public HumanInputType()
+        public IssueInputType()
         {
-            Name = "HumanInput";
+            Name = "IssueInput";
             Field(x => x.Name);
             Field(x => x.HomePlanet, nullable: true);
         }
