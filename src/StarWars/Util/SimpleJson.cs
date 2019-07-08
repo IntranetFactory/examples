@@ -65,7 +65,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using SimpleJson.Reflection;
-using DotLiquid;
 
 // ReSharper disable LoopCanBeConvertedToQuery
 // ReSharper disable RedundantExplicitArrayCreation
@@ -83,7 +82,7 @@ namespace SimpleJson
 #else
     public
 #endif
- class JsonArray : List<object>, ILiquidizable
+ class JsonArray : List<object>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonArray"/> class. 
@@ -131,7 +130,7 @@ namespace SimpleJson
 #if SIMPLE_JSON_DYNAMIC
  DynamicObject,
 #endif
- IDictionary<string, object>, ILiquidizable
+ IDictionary<string, object>
     {
         /// <summary>
         /// The internal member dictionary.
