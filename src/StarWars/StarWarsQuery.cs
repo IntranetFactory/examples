@@ -28,7 +28,11 @@ namespace StarWars
                     new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
                     new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
                 ),
-                resolve: context => data.GetAllIssues()
+
+                resolve: context => data.GetAllIssues(context.GetArgument<string>("startdate"),
+                                                    context.GetArgument<string>("enddate"),
+                                                    context.GetArgument<int>("page"),
+                                                    context.GetArgument<int>("pagesize"))
             );
 
             Func<ResolveFieldContext, string, object> func = (context, id) => data.GetDroidByIdAsync(id);

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 using GraphQL;
 using StarWars.Types;
@@ -94,14 +97,76 @@ namespace StarWars
             return Task.FromResult(_issues.FirstOrDefault(h => h.Id == id));
         }
 
-        public Task<List<Issue>> GetAllIssues()
+        public Task<List<Issue>> GetAllIssues(string startDate, string endDate, int page, int pageSize)
         {
-            return Task.FromResult(_issues);
+            List<Issue> issues = new List<Issue>();
+
+            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
+
+            if (startDate != "")
+            {
+                if (!url.EndsWith("?")) url += "&";
+                url += "startDate=" + startDate;
+            }
+
+            if (endDate != "")
+            {
+                if (!url.EndsWith("?")) url += "&";
+                url += "endDate=" + endDate;
+            }
+
+            if (page != 0)
+            {
+                if (!url.EndsWith("?")) url += "&";
+                url += "page=" + page;
+            }
+
+            if (pageSize != 0)
+            {
+                if (!url.EndsWith("?")) url += "&";
+                url += "pageSize=" + pageSize;
+            }
+
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
+            webRequest.ContentType = "application/json";
+            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
+            webRequest.Headers.Add("X-UserName", "admin");
+            using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
+            {
+                // Get the stream associated with the response.
+                Stream receiveStream = webResponse.GetResponseStream();
+                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+
+                // convert stream to JsonObject
+                dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
+
+
+                // read items from response and convert them to Issues
+                for (int i = 0; i < response.Data.items.Count; i++)
+                {
+                    dynamic item = response.Data.items[i];
+
+                    Issue issue = new Issue();
+                    issue.Id = item.id;
+                    issue.Name = item.title;
+                    issue.Description = item.description;
+                    issue.Date = item.date;
+                    issue.Link = item.link;
+
+                    issues.Add(issue);
+                }
+
+                webResponse.Close();
+                readStream.Close();
+            }
+
+            return Task.FromResult(issues);
         }
 
         public Task<Droid> GetDroidByIdAsync(string id)
         {
-            return Task.FromResult(_droids.FirstOrDefault(h => h.Id == id));
+            Droid d = _droids.FirstOrDefault(h => h.Id == id);
+            return Task.FromResult(d);
         }
 
         public Issue AddHuman(Issue human)
