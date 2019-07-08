@@ -11,7 +11,7 @@ namespace StarWars
             Name = "Query";
 
             Field<EntityInterface>("hero", resolve: context => data.GetDroidByIdAsync("3"));
-            Field<EntityInterface>("_issues", resolve: context => data.GetDroidByIdAsync("3"));
+
             Field<IssueType>(
                 "issue",
                 arguments: new QueryArguments(
@@ -20,13 +20,9 @@ namespace StarWars
                 resolve: context => data.GetIssueByIdAsync(context.GetArgument<string>("id"))
             );
 
-            Field<IssueType>(
+            Field<ListGraphType<IssueType>>(
                 "issues",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id", Description = "id of the issue" }
-                ),
-                resolve: context => data.GetIssueByIdAsync(context.GetArgument<string>("id"))
-                //resolve: context => data.GetAllIssues().ToString()
+                resolve: context => data.GetAllIssues()
             );
 
             Func<ResolveFieldContext, string, object> func = (context, id) => data.GetDroidByIdAsync(id);

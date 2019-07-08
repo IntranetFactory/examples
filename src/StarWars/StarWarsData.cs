@@ -96,7 +96,7 @@ namespace StarWars
 
         public Task<List<Issue>> GetAllIssues()
         {
-            return Task.FromResult(_issues.FindAll(i => i.Id != null));
+            return Task.FromResult(_issues);
         }
 
         public Task<Droid> GetDroidByIdAsync(string id)
