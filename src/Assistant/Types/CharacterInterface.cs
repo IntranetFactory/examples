@@ -1,6 +1,6 @@
 using GraphQL.Types;
 
-namespace StarWars.Types
+namespace Assistant.Types
 {
     public class EntityInterface : InterfaceGraphType<Entity>
     {
@@ -13,7 +13,7 @@ namespace StarWars.Types
             Field(d => d.Description, nullable: true).Description("The description of the character.");
 
             Field<ListGraphType<EntityInterface>>("friends");
-            Field<ListGraphType<EpisodeEnum>>("appearsIn", "Which movie they appear in.");
+            //Field<ListGraphType<EpisodeEnum>>("appearsIn", "Which movie they appear in.");
         }
     }
 }

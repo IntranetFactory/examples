@@ -11,11 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\StarWars\StarWars.csproj" />
+    <Folder Include="public\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="public\" />
+    <ProjectReference Include="..\..\Assistant\Assistant.csproj" />
   </ItemGroup>
 
 </Project>

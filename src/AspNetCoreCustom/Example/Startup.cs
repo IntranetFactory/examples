@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using StarWars;
-using StarWars.Types;
+using Assistant;
+using Assistant.Types;
 
 namespace Example
 {
@@ -20,15 +20,13 @@ namespace Example
             services.AddSingleton<IDocumentExecuter, DocumentExecuter>();
             services.AddSingleton<IDocumentWriter, DocumentWriter>();
 
-            services.AddSingleton<StarWarsData>();
-            services.AddSingleton<StarWarsQuery>();
-            services.AddSingleton<StarWarsMutation>();
+            services.AddSingleton<AssistantData>();
+            services.AddSingleton<AssistantQuery>();
+            services.AddSingleton<AssistantMutation>();
             services.AddSingleton<IssueType>();
             services.AddSingleton<IssueInputType>();
-            services.AddSingleton<DroidType>();
             services.AddSingleton<EntityInterface>();
-            services.AddSingleton<EpisodeEnum>();
-            services.AddSingleton<ISchema, StarWarsSchema>();
+            services.AddSingleton<ISchema, AssistantSchema>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }

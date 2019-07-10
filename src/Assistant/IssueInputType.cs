@@ -1,7 +1,7 @@
 using GraphQL.Types;
-using StarWars.Types;
+using Assistant.Types;
 
-namespace StarWars
+namespace Assistant
 {
     public class IssueInputType : InputObjectGraphType<issue>
     {
@@ -9,7 +9,6 @@ namespace StarWars
         {
             Name = "IssueInput";
             Field(x => x.Title);
-            Field(x => x.HomePlanet, nullable: true);
         }
     }
 }

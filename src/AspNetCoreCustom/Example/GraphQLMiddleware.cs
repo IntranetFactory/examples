@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -10,7 +10,7 @@ using GraphQL.Types;
 using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using StarWars;
+using Assistant;
 
 namespace Example
 {

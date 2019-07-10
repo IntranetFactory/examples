@@ -1,16 +1,14 @@
 using System;
 using GraphQL.Types;
-using StarWars.Types;
+using Assistant.Types;
 
-namespace StarWars
+namespace Assistant
 {
-    public class StarWarsQuery : ObjectGraphType<object>
+    public class AssistantQuery : ObjectGraphType<object>
     {
-        public StarWarsQuery(StarWarsData data)
+        public AssistantQuery(AssistantData data)
         {
             Name = "Query";
-
-            Field<EntityInterface>("hero", resolve: context => data.GetDroidByIdAsync("3"));
 
             Field<IssueType>(
                 "issue",
@@ -21,7 +19,7 @@ namespace StarWars
             );
 
             Field<ListGraphType<IssueType>>(
-                "myissuesremote",
+                "myissues",
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
@@ -36,7 +34,22 @@ namespace StarWars
             );
 
             Field<ListGraphType<IssueType>>(
-                "myissues",
+                "openissues",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
+                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
+                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
+                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
+                ),
+
+                resolve: context => data.GetOpenIssuesFromEndpoint(context.GetArgument<string>("startdate"),
+                                                    context.GetArgument<string>("enddate"),
+                                                    context.GetArgument<int>("page"),
+                                                    context.GetArgument<int>("pagesize"))
+            );
+
+            Field<ListGraphType<IssueType>>(
+                "myissuesstatic",
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
@@ -48,16 +61,6 @@ namespace StarWars
                                                     context.GetArgument<string>("enddate"),
                                                     context.GetArgument<int>("page"),
                                                     context.GetArgument<int>("pagesize"))
-            );
-
-            Func<ResolveFieldContext, string, object> func = (context, id) => data.GetDroidByIdAsync(id);
-
-            FieldDelegate<DroidType>(
-                "droid",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id", Description = "id of the droid" }
-                ),
-                resolve: func
             );
         }
     }

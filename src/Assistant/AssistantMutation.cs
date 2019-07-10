@@ -1,7 +1,7 @@
 using GraphQL.Types;
-using StarWars.Types;
+using Assistant.Types;
 
-namespace StarWars
+namespace Assistant
 {
     /// <example>
     /// This is an example JSON request for a mutation
@@ -14,9 +14,9 @@ namespace StarWars
     ///   }
     /// }
     /// </example>
-    public class StarWarsMutation : ObjectGraphType
+    public class AssistantMutation : ObjectGraphType
     {
-        public StarWarsMutation(StarWarsData data)
+        public AssistantMutation(AssistantData data)
         {
             Name = "Mutation";
 
@@ -28,7 +28,7 @@ namespace StarWars
                 resolve: context =>
                 {
                     var human = context.GetArgument<issue>("human");
-                    return data.AddHuman(human);
+                    return data.AddIssue(human);
                 });
         }
     }

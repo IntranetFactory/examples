@@ -1,4 +1,4 @@
-namespace StarWars.Types
+namespace Assistant.Types
 {
     public abstract class Entity
     {
@@ -13,11 +13,5 @@ namespace StarWars.Types
 
     public class issue : Entity
     {
-        public string HomePlanet { get; set; }
-    }
-
-    public class Droid : Entity
-    {
-        public string PrimaryFunction { get; set; }
     }
 }
