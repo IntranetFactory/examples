@@ -12,47 +12,47 @@ namespace StarWars
 {
     public class StarWarsData
     {
-        private readonly List<Issue> _issues = new List<Issue>();
+        private readonly List<issue> _issues = new List<issue>();
         private readonly List<Droid> _droids = new List<Droid>();
 
         public StarWarsData()
         {
-            _issues.Add(new Issue
+            _issues.Add(new issue
             {
                 Id = "1",
-                Name = "Issue1",
+                Title = "Issue1",
                 Description = "desc1",
                 Date = DateTime.Now.ToString(),
                 Link = "link1"
             });
-            _issues.Add(new Issue
+            _issues.Add(new issue
             {
                 Id = "2",
-                Name = "Issue2",
+                Title = "Issue2",
                 Description = "desc2",
                 Date = DateTime.Now.ToString(),
                 Link = "link2"
             });
-            _issues.Add(new Issue
+            _issues.Add(new issue
             {
                 Id = "3",
-                Name = "Issue3",
+                Title = "Issue3",
                 Description = "desc3",
                 Date = DateTime.Now.ToString(),
                 Link = "link3"
             });
-            _issues.Add(new Issue
+            _issues.Add(new issue
             {
                 Id = "4",
-                Name = "Issue4",
+                Title = "Issue4",
                 Description = "desc4",
                 Date = DateTime.Now.ToString(),
                 Link = "link4"
             });
-            _issues.Add(new Issue
+            _issues.Add(new issue
             {
                 Id = "5",
-                Name = "Issue5",
+                Title = "Issue5",
                 Description = "desc5",
                 Date = DateTime.Now.ToString(),
                 Link = "link5"
@@ -61,7 +61,7 @@ namespace StarWars
             _droids.Add(new Droid
             {
                 Id = "3",
-                Name = "R2-D2a",
+                Title = "R2-D2a",
                 Friends = new[] { "1", "2" },
                 AppearsIn = new[] { 4, 5, 6 },
                 PrimaryFunction = "Astromech"
@@ -69,7 +69,7 @@ namespace StarWars
             _droids.Add(new Droid
             {
                 Id = "4",
-                Name = "C-3PO",
+                Title = "C-3PO",
                 AppearsIn = new[] { 4, 5, 6 },
                 PrimaryFunction = "Protocol"
             });
@@ -92,14 +92,14 @@ namespace StarWars
             return friends;
         }
 
-        public Task<Issue> GetIssueByIdAsync(string id)
+        public Task<issue> GetIssueByIdAsync(string id)
         {
             return Task.FromResult(_issues.FirstOrDefault(h => h.Id == id));
         }
 
-        public Task<List<Issue>> GetAllIssues(string startDate, string endDate, int page, int pageSize)
+        public Task<List<issue>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
         {
-            List<Issue> issues = new List<Issue>();
+            List<issue> issues = new List<issue>();
 
             string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
 
@@ -129,7 +129,7 @@ namespace StarWars
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
+            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
             webRequest.Headers.Add("X-UserName", "admin");
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
@@ -146,9 +146,9 @@ namespace StarWars
                 {
                     dynamic item = response.Data.items[i];
 
-                    Issue issue = new Issue();
+                    issue issue = new issue();
                     issue.Id = item.id;
-                    issue.Name = item.title;
+                    issue.Title = item.title;
                     issue.Description = item.description;
                     issue.Date = item.date;
                     issue.Link = item.link;
@@ -163,13 +163,63 @@ namespace StarWars
             return Task.FromResult(issues);
         }
 
+        public Task<List<issue>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
+        {
+            List<issue> issues = new List<issue>();
+
+            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
+
+            DateTime? startDate = null;
+            if (_startDate != "")
+            {
+                startDate = _startDate.ToDateTime();
+            }
+
+            DateTime? endDate = null;
+            if (_endDate != "")
+            {
+                endDate = _endDate.ToDateTime();
+            }
+
+            // filter by daterange
+            List<issue> filteredByDateTime = new List<issue>();
+            if (startDate != null && endDate != null)
+            {
+                for (int i = 0; i < _issues.Count; i++)
+                {
+                    DateTime d = _issues[i].Date.ToDateTime();
+                    if (d > startDate && d < endDate)
+                    {
+                        filteredByDateTime.Add(_issues[i]);
+                    }
+                }
+            }
+
+            List<issue> paginatedItems = new List<issue>();
+            if (page > 0 && pageSize > 0)
+            {
+                int offset = (page - 1) * pageSize;
+
+                for (int i = offset; i < offset + pageSize; i++)
+                {
+                    if (i >= filteredByDateTime.Count)
+                    {
+                        break;
+                    }
+                    paginatedItems.Add(filteredByDateTime[i]);
+                }
+            }
+
+            return Task.FromResult(paginatedItems);
+        }
+
         public Task<Droid> GetDroidByIdAsync(string id)
         {
             Droid d = _droids.FirstOrDefault(h => h.Id == id);
             return Task.FromResult(d);
         }
 
-        public Issue AddHuman(Issue human)
+        public issue AddHuman(issue human)
         {
             human.Id = Guid.NewGuid().ToString();
             _issues.Add(human);

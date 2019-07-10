@@ -21,7 +21,7 @@ namespace StarWars
             );
 
             Field<ListGraphType<IssueType>>(
-                "issues",
+                "myissuesremote",
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
@@ -29,7 +29,22 @@ namespace StarWars
                     new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
                 ),
 
-                resolve: context => data.GetAllIssues(context.GetArgument<string>("startdate"),
+                resolve: context => data.GetIssuesFromEndpoint(context.GetArgument<string>("startdate"),
+                                                    context.GetArgument<string>("enddate"),
+                                                    context.GetArgument<int>("page"),
+                                                    context.GetArgument<int>("pagesize"))
+            );
+
+            Field<ListGraphType<IssueType>>(
+                "myissues",
+                arguments: new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
+                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
+                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
+                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
+                ),
+
+                resolve: context => data.GetIssuesFromStaticList(context.GetArgument<string>("startdate"),
                                                     context.GetArgument<string>("enddate"),
                                                     context.GetArgument<int>("page"),
                                                     context.GetArgument<int>("pagesize"))

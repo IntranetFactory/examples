@@ -27,7 +27,7 @@ namespace StarWars
                 ),
                 resolve: context =>
                 {
-                    var human = context.GetArgument<Issue>("human");
+                    var human = context.GetArgument<issue>("human");
                     return data.AddHuman(human);
                 });
         }
