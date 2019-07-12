@@ -57,7 +57,7 @@ namespace Assistant
                     new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
                 ),
 
-                resolve: context => data.GetIssuesFromStaticList(context.GetArgument<string>("startdate"),
+                resolve : context => data.GetIssuesFromStaticList(context.GetArgument<string>("startdate"),
                                                     context.GetArgument<string>("enddate"),
                                                     context.GetArgument<int>("page"),
                                                     context.GetArgument<int>("pagesize"))

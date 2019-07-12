@@ -238,7 +238,7 @@ namespace Assistant
                 }
             }
 
-            return Task.FromResult(paginatedItems);
+            return Task.FromResult(testlist);
         }
 
         public issue AddIssue(issue _issue)
