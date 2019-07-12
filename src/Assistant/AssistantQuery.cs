@@ -12,21 +12,9 @@ namespace Assistant
         {
             Name = "Query";
 
-            Field<ListGraphType<IssueType>>(
-                "myissuesstatic",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
-                ),
-
-                resolve: context => data.GetIssuesFromStaticList()
-            );
-
             //name Query does not exist
 
-
+            AddField(
             new FieldType()
             {
                 Name = "querydynamic",
@@ -43,7 +31,7 @@ namespace Assistant
                     d1.Add("title", "title2");
 
                     SimpleJson.JsonObject d2 = new SimpleJson.JsonObject();
-                    d2.Add("id","id2");
+                    d2.Add("id", "id2");
                     d2.Add("title", "title2");
 
                     result.Add(d1);
@@ -52,7 +40,7 @@ namespace Assistant
                     //var result = simulations.Find(GraphQL.Builders<dynamic>.Filter.Empty).Limit(10).ToList();
                     return result;
                 })
-            };
+            });
         }
     }
 }
