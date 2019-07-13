@@ -14,4 +14,10 @@ namespace Assistant.Types
     public class issue : Entity
     {
     }
+
+    public abstract class item
+    {
+        public string Id { get; set; }
+        public string id { get; set; }
+    }
 }

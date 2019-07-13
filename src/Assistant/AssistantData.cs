@@ -243,8 +243,9 @@ namespace Assistant
             {
                 dynamic jo = new SimpleJson.JsonObject();
                 jo.Id = item.Id;
-                jo.Title = item.Title;
-                paginatedItems.Add(item);
+                jo.id = item.Id;
+                jo.title = item.Title;
+                paginatedItems.Add(jo);
             }
 
             return Task.FromResult(paginatedItems);

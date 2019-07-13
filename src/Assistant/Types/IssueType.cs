@@ -1,8 +1,10 @@
 using GraphQL.Types;
+using GraphQL.Resolvers;
+using System.Collections.Generic;
 
 namespace Assistant.Types
 {
-    public class IssueType : ObjectGraphType<issue>
+    public class IssueType : ObjectGraphType<item>
     {
         public IssueType(AssistantData data)
         {
@@ -10,12 +12,31 @@ namespace Assistant.Types
             Description = "Issues you have.";
 
             Field(h => h.Id).Description("The id of the issue.");
-            Field(h => h.Title, nullable: true).Description("The name of the issue.");
-            Field(h => h.Description, nullable: true).Description("The description of the issue.");
-            Field(h => h.Date, nullable: true).Description("The date of the issue.");
-            Field(h => h.Link, nullable: true).Description("The link of the issue.");
+            Field<StringGraphType>("Title");
 
-            Interface<EntityInterface>();
+            foreach (FieldType f in Fields)
+            {
+                f.Resolver = new FuncFieldResolver<object>(ctx =>
+                {
+                    var o = ctx.Source as IDictionary<string, object>;
+                    if (o == null)
+                    {
+                        return null;
+                    }
+                                       
+                    if (!o.ContainsKey(ctx.FieldName))
+                    {
+                        return null;
+                    }
+                                       
+                    return o[ctx.FieldName];
+
+                });
+
+            }
+
+
+
         }
     }
 }
