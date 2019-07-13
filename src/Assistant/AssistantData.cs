@@ -195,47 +195,56 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public Task<List<issue>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
+        public Task<List<dynamic>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
         {
             DateTime? startDate = null;
-            if (_startDate != "")
+            DateTime? endDate = null;
+            List<issue> filteredByDateTime = new List<issue>();
+            List<dynamic> paginatedItems = new List<dynamic>();
+
+            if (!string.IsNullOrEmpty(_startDate))
             {
                 startDate = _startDate.ToDateTime();
             }
-
-            DateTime? endDate = null;
-            if (_endDate != "")
+            
+            if (!string.IsNullOrEmpty(_endDate))
             {
                 endDate = _endDate.ToDateTime();
             }
 
-            // filter by daterange
-            List<issue> filteredByDateTime = new List<issue>();
-            if (startDate != null && endDate != null)
-            {
-                for (int i = 0; i < testlist.Count; i++)
-                {
-                    DateTime d = testlist[i].Date.ToDateTime();
-                    if (d > startDate && d < endDate)
-                    {
-                        filteredByDateTime.Add(testlist[i]);
-                    }
-                }
-            }
+            //// filter by daterange            
+            //if (startDate != null && endDate != null)
+            //{
+            //    for (int i = 0; i < testlist.Count; i++)
+            //    {
+            //        DateTime d = testlist[i].Date.ToDateTime();
+            //        if (d > startDate && d < endDate)
+            //        {
+            //            filteredByDateTime.Add(testlist[i]);
+            //        }
+            //    }
+            //}
+            
+            //if (page > 0 && pageSize > 0)
+            //{
+            //    int offset = (page - 1) * pageSize;
 
-            List<issue> paginatedItems = new List<issue>();
-            if (page > 0 && pageSize > 0)
-            {
-                int offset = (page - 1) * pageSize;
+            //    for (int i = offset; i < offset + pageSize; i++)
+            //    {
+            //        if (i >= filteredByDateTime.Count)
+            //        {
+            //            break;
+            //        }
+            //        paginatedItems.Add(filteredByDateTime[i]);
+            //    }
+            //}
 
-                for (int i = offset; i < offset + pageSize; i++)
-                {
-                    if (i >= filteredByDateTime.Count)
-                    {
-                        break;
-                    }
-                    paginatedItems.Add(filteredByDateTime[i]);
-                }
+            foreach(var item in testlist)
+            {
+                dynamic jo = new SimpleJson.JsonObject();
+                jo.Id = item.Id;
+                jo.Title = item.Title;
+                paginatedItems.Add(item);
             }
 
             return Task.FromResult(paginatedItems);
