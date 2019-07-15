@@ -8,7 +8,11 @@ namespace Assistant
         public IssueInputType()
         {
             Name = "IssueInput";
+            // just example input for creating issue
             Field(x => x.Title);
+            Field(x => x.Description);
+            Field(x => x.Date);
+            Field(x => x.Link);
         }
     }
 }

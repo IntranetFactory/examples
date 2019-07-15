@@ -4,15 +4,13 @@ using Assistant.Types;
 namespace Assistant
 {
     /// <example>
-    /// This is an example JSON request for a mutation
-    /// {
-    ///   "query": "mutation ($human:HumanInput!){ createHuman(human: $human) { id name } }",
-    ///   "variables": {
-    ///     "human": {
-    ///       "name": "Boba Fett"
-    ///     }
-    ///   }
-    /// }
+    /*
+    mutation{
+      createIssue(issue:{title:"new title", description:"description", date:"2019-07-15T13:31:15Z", link:"google.com"}){
+          title
+      }
+    }
+    */
     /// </example>
     public class AssistantMutation : ObjectGraphType
     {
@@ -21,14 +19,14 @@ namespace Assistant
             Name = "Mutation";
 
             Field<IssueType>(
-                "createHuman",
+                "createIssue",
                 arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IssueInputType>> {Name = "human"}
+                    new QueryArgument<NonNullGraphType<IssueInputType>> { Name = "issue" }
                 ),
                 resolve: context =>
                 {
-                    var human = context.GetArgument<issue>("human");
-                    return data.AddIssue(human);
+                    var issue = context.GetArgument<issue>("issue");
+                    return data.AddIssue(issue);
                 });
         }
     }

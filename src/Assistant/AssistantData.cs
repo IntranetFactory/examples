@@ -255,7 +255,26 @@ namespace Assistant
 
         public issue AddIssue(issue _issue)
         {
-            _issue.Id = Guid.NewGuid().ToString();
+            /*
+            // send post request to gitlab connector to create Issue
+            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/gitlab-connector/issue-handler";
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+            webRequest.Method = "POST";
+            webRequest.ContentType = "application/json";
+            webRequest.Headers.Add("X-Gitlab-Token", "12345678");
+
+
+            string stringData = ""; //place body here
+            var data = Encoding.ASCII.GetBytes(stringData); // or UTF8
+
+            webRequest.ContentLength = data.Length;
+
+            var newStream = webRequest.GetRequestStream();
+            newStream.Write(data, 0, data.Length);
+            newStream.Close();
+            HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse();
+            */
+            // TODO : adde exception handling and show error messages to user
             testlist.Add(_issue);
             return _issue;
         }
