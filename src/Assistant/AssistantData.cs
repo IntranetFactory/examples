@@ -198,21 +198,22 @@ namespace Assistant
         public Task<List<issue>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
         {
             DateTime? startDate = null;
-            if (_startDate != "")
+            if (string.IsNullOrEmpty(_startDate))
             {
                 startDate = _startDate.ToDateTime();
             }
 
             DateTime? endDate = null;
-            if (_endDate != "")
+            if (string.IsNullOrEmpty(_endDate))
             {
                 endDate = _endDate.ToDateTime();
             }
 
             // filter by daterange
-            List<issue> filteredByDateTime = new List<issue>();
-            if (startDate != null && endDate != null)
+            List<issue> filteredByDateTime = null;
+            if (!string.IsNullOrEmpty(_startDate) && !string.IsNullOrEmpty(_endDate))
             {
+                filteredByDateTime = new List<issue>();
                 for (int i = 0; i < testlist.Count; i++)
                 {
                     DateTime d = testlist[i].Date.ToDateTime();
@@ -223,9 +224,15 @@ namespace Assistant
                 }
             }
 
-            List<issue> paginatedItems = new List<issue>();
+            if (filteredByDateTime == null)
+            {
+                filteredByDateTime = testlist;
+            }
+
+            List<issue> paginatedItems = null;
             if (page > 0 && pageSize > 0)
             {
+                paginatedItems = new List<issue>();
                 int offset = (page - 1) * pageSize;
 
                 for (int i = offset; i < offset + pageSize; i++)
@@ -236,6 +243,11 @@ namespace Assistant
                     }
                     paginatedItems.Add(filteredByDateTime[i]);
                 }
+            }
+
+            if (paginatedItems == null)
+            {
+                paginatedItems = filteredByDateTime;
             }
 
             return Task.FromResult(paginatedItems);
