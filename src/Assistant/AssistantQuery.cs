@@ -71,7 +71,7 @@ namespace Assistant
                 AddField(
                 new FieldType()
                 {
-                    Name = f.Name,
+                    Name = f.Name + "xx",
                     ResolvedType = new ListGraphType(f.ResolvedType),
                     Arguments = new QueryArguments(
                         f.Arguments
