@@ -12,11 +12,12 @@ namespace Assistant
 {
     public class AssistantData
     {
-        private readonly List<issue> testlist = new List<issue>();
+        public List<issue> issueTestList = new List<issue>();
+        public List<issue> taskTestList = new List<issue>();
 
         public AssistantData()
         {
-            testlist.Add(new issue
+            issueTestList.Add(new issue
             {
                 Id = "1",
                 Title = "Issue1",
@@ -24,7 +25,7 @@ namespace Assistant
                 Date = DateTime.Now.ToString(),
                 Link = "link1"
             });
-            testlist.Add(new issue
+            issueTestList.Add(new issue
             {
                 Id = "2",
                 Title = "Issue2",
@@ -32,7 +33,7 @@ namespace Assistant
                 Date = DateTime.Now.ToString(),
                 Link = "link2"
             });
-            testlist.Add(new issue
+            issueTestList.Add(new issue
             {
                 Id = "3",
                 Title = "Issue3",
@@ -40,7 +41,7 @@ namespace Assistant
                 Date = DateTime.Now.ToString(),
                 Link = "link3"
             });
-            testlist.Add(new issue
+            issueTestList.Add(new issue
             {
                 Id = "4",
                 Title = "Issue4",
@@ -48,10 +49,51 @@ namespace Assistant
                 Date = DateTime.Now.ToString(),
                 Link = "link4"
             });
-            testlist.Add(new issue
+            issueTestList.Add(new issue
             {
                 Id = "5",
                 Title = "Issue5",
+                Description = "desc5",
+                Date = DateTime.Now.ToString(),
+                Link = "link5"
+            });
+
+            taskTestList.Add(new issue
+            {
+                Id = "1",
+                Title = "Task1",
+                Description = "desc1",
+                Date = DateTime.Now.ToString(),
+                Link = "link1"
+            });
+            taskTestList.Add(new issue
+            {
+                Id = "2",
+                Title = "Task2",
+                Description = "desc2",
+                Date = DateTime.Now.ToString(),
+                Link = "link2"
+            });
+            taskTestList.Add(new issue
+            {
+                Id = "3",
+                Title = "Task3",
+                Description = "desc3",
+                Date = DateTime.Now.ToString(),
+                Link = "link3"
+            });
+            taskTestList.Add(new issue
+            {
+                Id = "4",
+                Title = "Task4",
+                Description = "desc4",
+                Date = DateTime.Now.ToString(),
+                Link = "link4"
+            });
+            taskTestList.Add(new issue
+            {
+                Id = "5",
+                Title = "Task5",
                 Description = "desc5",
                 Date = DateTime.Now.ToString(),
                 Link = "link5"
@@ -60,7 +102,7 @@ namespace Assistant
 
         public Task<issue> GetIssueByIdAsync(string id)
         {
-            return Task.FromResult(testlist.FirstOrDefault(h => h.Id == id));
+            return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
 
         public Task<List<issue>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
@@ -239,7 +281,7 @@ namespace Assistant
             //    }
             //}
 
-            foreach(var item in testlist)
+            foreach(var item in issueTestList)
             {
                 dynamic jo = new SimpleJson.JsonObject();
                 jo.Id = item.Id;
@@ -254,7 +296,7 @@ namespace Assistant
         public issue AddIssue(issue _issue)
         {
             _issue.Id = Guid.NewGuid().ToString();
-            testlist.Add(_issue);
+            issueTestList.Add(_issue);
             return _issue;
         }
     }
