@@ -63,7 +63,7 @@ namespace Assistant
             return Task.FromResult(testlist.FirstOrDefault(h => h.Id == id));
         }
 
-        public Task<List<issue>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public Task<List<issue>> GetIssuesFromEndpoint(string startDate, string endDate, int first, int offset)
         {
             List<issue> issues = new List<issue>();
 
@@ -81,17 +81,20 @@ namespace Assistant
                 url += "endDate=" + endDate;
             }
 
-            if (page != 0)
+            int page = 0;
+            if (offset > 0)
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "page=" + page;
+                page = offset / first;
             }
 
-            if (pageSize != 0)
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "pageSize=" + pageSize;
-            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "page=" + page;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "pageSize=" + pageSize;
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
@@ -129,7 +132,7 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public Task<List<issue>> GetOpenIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public Task<List<issue>> GetOpenIssuesFromEndpoint(string startDate, string endDate, int first, int offset)
         {
             List<issue> issues = new List<issue>();
 
@@ -147,17 +150,20 @@ namespace Assistant
                 url += "endDate=" + endDate;
             }
 
-            if (page != 0)
+            int page = 0;
+            if (offset > 0)
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "page=" + page;
+                page = offset / first;
             }
 
-            if (pageSize != 0)
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "pageSize=" + pageSize;
-            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "page=" + page;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "pageSize=" + pageSize;
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
@@ -195,24 +201,15 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public Task<List<issue>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
+        public Task<List<issue>> GetIssuesFromStaticList(string _startDate, string _endDate, int first, int offset)
         {
-            DateTime? startDate = null;
-            if (string.IsNullOrEmpty(_startDate))
-            {
-                startDate = _startDate.ToDateTime();
-            }
-
-            DateTime? endDate = null;
-            if (string.IsNullOrEmpty(_endDate))
-            {
-                endDate = _endDate.ToDateTime();
-            }
-
             // filter by daterange
             List<issue> filteredByDateTime = null;
             if (!string.IsNullOrEmpty(_startDate) && !string.IsNullOrEmpty(_endDate))
             {
+                DateTime startDate = _startDate.ToDateTime();
+                DateTime endDate = _endDate.ToDateTime();
+
                 filteredByDateTime = new List<issue>();
                 for (int i = 0; i < testlist.Count; i++)
                 {
@@ -229,13 +226,20 @@ namespace Assistant
                 filteredByDateTime = testlist;
             }
 
+            int page = 0;
+            if (offset > 0)
+            {
+                page = offset / first;
+            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
             List<issue> paginatedItems = null;
-            if (page > 0 && pageSize > 0)
+            if (first > 0)
             {
                 paginatedItems = new List<issue>();
-                int offset = (page - 1) * pageSize;
 
-                for (int i = offset; i < offset + pageSize; i++)
+                for (int i = offset; i < offset + first; i++)
                 {
                     if (i >= filteredByDateTime.Count)
                     {

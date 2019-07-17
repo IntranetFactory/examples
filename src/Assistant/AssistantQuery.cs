@@ -23,14 +23,14 @@ namespace Assistant
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
+                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
+                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
                 ),
 
                 resolve: context => data.GetIssuesFromEndpoint(context.GetArgument<string>("startdate"),
                                                     context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
+                                                    context.GetArgument<int>("first"),
+                                                    context.GetArgument<int>("offset"))
             );
 
             Field<ListGraphType<IssueType>>(
@@ -38,14 +38,14 @@ namespace Assistant
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
+                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
+                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
                 ),
 
                 resolve: context => data.GetOpenIssuesFromEndpoint(context.GetArgument<string>("startdate"),
                                                     context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
+                                                    context.GetArgument<int>("first"),
+                                                    context.GetArgument<int>("offset"))
             );
 
             Field<ListGraphType<IssueType>>(
@@ -53,14 +53,14 @@ namespace Assistant
                 arguments: new QueryArguments(
                     new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
                     new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
+                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
+                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
                 ),
 
                 resolve: context => data.GetIssuesFromStaticList(context.GetArgument<string>("startdate"),
                                                     context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
+                                                    context.GetArgument<int>("first"),
+                                                    context.GetArgument<int>("offset"))
             );
         }
     }
