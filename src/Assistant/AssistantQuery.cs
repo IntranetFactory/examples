@@ -1,9 +1,6 @@
 using System;
 using GraphQL.Types;
 using Assistant.Types;
-using GraphQL.Resolvers;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace Assistant
 {
@@ -11,75 +8,6 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
-            var schema = Schema.For(@"
-              type Issue {
-                id: String
-                title: String
-              }
-
-              type Query {
-                issue(id: String!): Issue
-              }
-
-              type Query {
-                issues: Issue
-              }
-            ");
-
-            var simulationType = schema.FindType("Issue") as ObjectGraphType;
-
-            // register types
-            foreach (FieldType f in simulationType.Fields)
-            {
-                f.Resolver = new FuncFieldResolver<object>(ctx =>
-                {
-                    var o = ctx.Source as IDictionary<string, object>;
-                    if (o == null)
-                    {
-                        return null;
-                    }
-
-                    if (!o.ContainsKey(ctx.FieldName))
-                    {
-                        return null;
-                    }
-
-                    return o[ctx.FieldName];
-
-                });
-            }
-
-            // register queries and parameters
-            foreach (FieldType f in schema.Query.Fields)
-            {
-                AddField(
-                new FieldType()
-                {
-                    Name = f.Name,
-                    ResolvedType = new ListGraphType(f.ResolvedType),
-                    Arguments = new QueryArguments(
-                        f.Arguments
-                    ),
-
-                    // right now all queries return same result
-                    // this should be discussed
-                    Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
-                    {
-                        List<dynamic> dynamicList = new List<dynamic>();
-                        foreach (var item in data.testlist)
-                        {
-                            dynamic jo = new SimpleJson.JsonObject();
-                            jo.Id = item.Id;
-                            jo.id = item.Id;
-                            jo.title = item.Title;
-                            dynamicList.Add(jo);
-                        }
-                        return dynamicList;
-                    })
-                });
-            }
-
-            /*
             Name = "Query";
 
             Field<IssueType>(
@@ -134,7 +62,6 @@ namespace Assistant
                                                     context.GetArgument<int>("page"),
                                                     context.GetArgument<int>("pagesize"))
             );
-            */
         }
     }
 }

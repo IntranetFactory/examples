@@ -12,7 +12,7 @@ namespace Assistant
 {
     public class AssistantData
     {
-        public List<issue> testlist = new List<issue>();
+        private readonly List<issue> testlist = new List<issue>();
 
         public AssistantData()
         {

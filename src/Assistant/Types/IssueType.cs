@@ -1,7 +1,6 @@
 using GraphQL.Types;
 using GraphQL.Resolvers;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Assistant.Types
 {
@@ -14,6 +13,30 @@ namespace Assistant.Types
 
             Field(h => h.Id).Description("The id of the issue.");
             Field<StringGraphType>("Title");
+
+            foreach (FieldType f in Fields)
+            {
+                f.Resolver = new FuncFieldResolver<object>(ctx =>
+                {
+                    var o = ctx.Source as IDictionary<string, object>;
+                    if (o == null)
+                    {
+                        return null;
+                    }
+                                       
+                    if (!o.ContainsKey(ctx.FieldName))
+                    {
+                        return null;
+                    }
+                                       
+                    return o[ctx.FieldName];
+
+                });
+
+            }
+
+
+
         }
     }
 }
