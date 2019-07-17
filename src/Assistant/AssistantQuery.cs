@@ -1,6 +1,5 @@
 using System;
 using GraphQL.Types;
-using Assistant.Types;
 using GraphQL.Resolvers;
 using System.Linq;
 using System.Collections.Generic;
@@ -91,7 +90,7 @@ namespace Assistant
             {
                 List<dynamic> dynamicList = new List<dynamic>();
 
-                List<issue> listToReturn = null;
+                List<dynamic> listToReturn = null;
 
                 if (name == "issues")
                 {

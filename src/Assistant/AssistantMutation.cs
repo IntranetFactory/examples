@@ -1,5 +1,4 @@
 using GraphQL.Types;
-using Assistant.Types;
 
 namespace Assistant
 {
@@ -19,7 +18,7 @@ namespace Assistant
         public AssistantMutation(AssistantData data)
         {
             Name = "Mutation";
-
+            /*
             Field<IssueType>(
                 "createHuman",
                 arguments: new QueryArguments(
@@ -30,6 +29,7 @@ namespace Assistant
                     var human = context.GetArgument<issue>("human");
                     return data.AddIssue(human);
                 });
+                */
         }
     }
 }

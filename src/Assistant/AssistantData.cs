@@ -5,109 +5,108 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using GraphQL;
-using Assistant.Types;
 
 namespace Assistant
 {
+
     public class AssistantData
     {
-        public List<issue> issueTestList = new List<issue>();
-        public List<issue> taskTestList = new List<issue>();
+        public List<dynamic> issueTestList = new List<dynamic>();
+        public List<dynamic> taskTestList = new List<dynamic>();
 
         public AssistantData()
         {
-            issueTestList.Add(new issue
-            {
-                Id = "1",
-                Title = "Issue1",
-                Description = "desc1",
-                Date = DateTime.Now.ToString(),
-                Link = "link1"
-            });
-            issueTestList.Add(new issue
-            {
-                Id = "2",
-                Title = "Issue2",
-                Description = "desc2",
-                Date = DateTime.Now.ToString(),
-                Link = "link2"
-            });
-            issueTestList.Add(new issue
-            {
-                Id = "3",
-                Title = "Issue3",
-                Description = "desc3",
-                Date = DateTime.Now.ToString(),
-                Link = "link3"
-            });
-            issueTestList.Add(new issue
-            {
-                Id = "4",
-                Title = "Issue4",
-                Description = "desc4",
-                Date = DateTime.Now.ToString(),
-                Link = "link4"
-            });
-            issueTestList.Add(new issue
-            {
-                Id = "5",
-                Title = "Issue5",
-                Description = "desc5",
-                Date = DateTime.Now.ToString(),
-                Link = "link5"
-            });
+            dynamic issue1 = new SimpleJson.JsonObject();
+            issue1.Id = "1";
+            issue1.Title = "Issue1";
+            issue1.Description = "desc1";
+            issue1.Date = DateTime.Now.ToString();
+            issue1.Link = "link1";
 
-            taskTestList.Add(new issue
-            {
-                Id = "1",
-                Title = "Task1",
-                Description = "desc1",
-                Date = DateTime.Now.ToString(),
-                Link = "link1"
-            });
-            taskTestList.Add(new issue
-            {
-                Id = "2",
-                Title = "Task2",
-                Description = "desc2",
-                Date = DateTime.Now.ToString(),
-                Link = "link2"
-            });
-            taskTestList.Add(new issue
-            {
-                Id = "3",
-                Title = "Task3",
-                Description = "desc3",
-                Date = DateTime.Now.ToString(),
-                Link = "link3"
-            });
-            taskTestList.Add(new issue
-            {
-                Id = "4",
-                Title = "Task4",
-                Description = "desc4",
-                Date = DateTime.Now.ToString(),
-                Link = "link4"
-            });
-            taskTestList.Add(new issue
-            {
-                Id = "5",
-                Title = "Task5",
-                Description = "desc5",
-                Date = DateTime.Now.ToString(),
-                Link = "link5"
-            });
+            dynamic issue2 = new SimpleJson.JsonObject();
+            issue2.Id = "2";
+            issue2.Title = "Issue2";
+            issue2.Description = "desc2";
+            issue2.Date = DateTime.Now.ToString();
+            issue2.Link = "link2";
+
+            dynamic issue3 = new SimpleJson.JsonObject();
+            issue3.Id = "3";
+            issue3.Title = "Issue3";
+            issue3.Description = "desc3";
+            issue3.Date = DateTime.Now.ToString();
+            issue3.Link = "link3";
+
+            dynamic issue4 = new SimpleJson.JsonObject();
+            issue4.Id = "4";
+            issue4.Title = "Issue4";
+            issue4.Description = "desc4";
+            issue4.Date = DateTime.Now.ToString();
+            issue4.Link = "link4";
+
+            dynamic issue5 = new SimpleJson.JsonObject();
+            issue5.Id = "5";
+            issue5.Title = "Issue5";
+            issue5.Description = "desc5";
+            issue5.Date = DateTime.Now.ToString();
+            issue5.Link = "link5";
+
+            issueTestList.Add(issue1);
+            issueTestList.Add(issue2);
+            issueTestList.Add(issue3);
+            issueTestList.Add(issue4);
+            issueTestList.Add(issue5);
+
+            dynamic task1 = new SimpleJson.JsonObject();
+            task1.Id = "1";
+            task1.Title = "Task1";
+            task1.Description = "desc1";
+            task1.Date = DateTime.Now.ToString();
+            task1.Link = "link1";
+
+            dynamic task2 = new SimpleJson.JsonObject();
+            task2.Id = "2";
+            task2.Title = "Task2";
+            task2.Description = "desc2";
+            task2.Date = DateTime.Now.ToString();
+            task2.Link = "link2";
+
+            dynamic task3 = new SimpleJson.JsonObject();
+            task3.Id = "3";
+            task3.Title = "Task3";
+            task3.Description = "desc3";
+            task3.Date = DateTime.Now.ToString();
+            task3.Link = "link3";
+
+            dynamic task4 = new SimpleJson.JsonObject();
+            task3.Id = "4";
+            task3.Title = "Task4";
+            task3.Description = "desc4";
+            task3.Date = DateTime.Now.ToString();
+            task3.Link = "link4";
+
+            dynamic task5 = new SimpleJson.JsonObject();
+            task3.Id = "5";
+            task3.Title = "Task5";
+            task3.Description = "desc5";
+            task3.Date = DateTime.Now.ToString();
+            task3.Link = "link5";
+
+            taskTestList.Add(task1);
+            taskTestList.Add(task2);
+            taskTestList.Add(task3);
+            taskTestList.Add(task4);
+            taskTestList.Add(task5);
         }
 
-        public Task<issue> GetIssueByIdAsync(string id)
+        public Task<dynamic> GetIssueByIdAsync(string id)
         {
             return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
 
-        public Task<List<issue>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public Task<List<dynamic>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
         {
-            List<issue> issues = new List<issue>();
+            List<dynamic> issues = new List<dynamic>();
 
             string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
 
@@ -154,7 +153,7 @@ namespace Assistant
                 {
                     dynamic item = response.Data.items[i];
 
-                    issue issue = new issue();
+                    dynamic issue = new SimpleJson.JsonObject();
                     issue.Id = item.id;
                     issue.Title = item.title;
                     issue.Description = item.description;
@@ -171,9 +170,9 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public Task<List<issue>> GetOpenIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public Task<List<dynamic>> GetOpenIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
         {
-            List<issue> issues = new List<issue>();
+            List<dynamic> issues = new List<dynamic>();
 
             string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues-open?";
 
@@ -220,7 +219,7 @@ namespace Assistant
                 {
                     dynamic item = response.Data.items[i];
 
-                    issue issue = new issue();
+                    dynamic issue = new SimpleJson.JsonObject();
                     issue.Id = item.id;
                     issue.Title = item.title;
                     issue.Description = item.description;
@@ -241,7 +240,7 @@ namespace Assistant
         {
             DateTime? startDate = null;
             DateTime? endDate = null;
-            List<issue> filteredByDateTime = new List<issue>();
+            List<dynamic> filteredByDateTime = new List<dynamic>();
             List<dynamic> paginatedItems = new List<dynamic>();
 
             if (!string.IsNullOrEmpty(_startDate))
@@ -293,7 +292,7 @@ namespace Assistant
             return Task.FromResult(paginatedItems);
         }
 
-        public issue AddIssue(issue _issue)
+        public dynamic AddIssue(dynamic _issue)
         {
             _issue.Id = Guid.NewGuid().ToString();
             issueTestList.Add(_issue);

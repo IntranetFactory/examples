@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Assistant;
-using Assistant.Types;
 
 namespace Example
 {
@@ -23,9 +22,7 @@ namespace Example
             services.AddSingleton<AssistantData>();
             services.AddSingleton<AssistantQuery>();
             services.AddSingleton<AssistantMutation>();
-            services.AddSingleton<IssueType>();
             services.AddSingleton<IssueInputType>();
-            services.AddSingleton<EntityInterface>();
             services.AddSingleton<ISchema, AssistantSchema>();
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
