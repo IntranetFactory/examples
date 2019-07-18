@@ -10,6 +10,7 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
+            /*
             var schema = Schema.For(@"
             type taskStatus {
                 title: String
@@ -62,6 +63,21 @@ namespace Assistant
                 issueState: issuesStatus
             }
             ");
+            */
+            var schema = new Schema();
+
+            var person = new ObjectGraphType { Name = "Person" };
+            person.Field(new StringGraphType().GetType(), "name");
+            person.Field(
+                new ListGraphType(new NonNullGraphType(person)).GetType(),
+                "friends",
+                resolve: ctx => new[] { new { Name = "Jaime" }, new { Name = "Joe" } });
+
+            var root = new ObjectGraphType { Name = "Root" };
+            root.Field(person.GetType(), "hero", resolve: ctx => ctx.RootValue);
+
+            schema.Query = root;
+            schema.RegisterType(person);
 
             // loop through all types in schema to filter out custo types define by user
             var allTypes = schema.AllTypes.ToList();
