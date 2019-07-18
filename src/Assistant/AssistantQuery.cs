@@ -96,7 +96,7 @@ namespace Assistant
                 new FieldType()
                 {
                     Name = f.Name,
-                    ResolvedType = new ListGraphType(f.ResolvedType),
+                    ResolvedType = new NonNullGraphType(f.ResolvedType),
                     Arguments = new QueryArguments(
                         f.Arguments
                     ),
