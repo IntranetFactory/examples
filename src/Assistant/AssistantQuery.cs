@@ -11,24 +11,58 @@ namespace Assistant
         public AssistantQuery(AssistantData data)
         {
             var schema = Schema.For(@"
-              type Task {
+            interface Status {
+                title: String!
+                link: String!
+                linkLabel: String!
+                actionable: Boolean!
+                value: Int!
+                color: String!
+                date: String!
+                description: String!
+            }
+
+            type taskStatus implements Status{
+                title: String!
+                link: String!
+                linkLabel: String!
+                actionable: Boolean!
+                value: Int!
+                color: String!
+                date: String!
+                description: String!
+                tmp: String!
+            }
+
+            type issuesStatus implements Status{
+                title: String!
+                link: String!
+                linkLabel: String!
+                actionable: Boolean!
+                value: Int!
+                color: String!
+                date: String!
+                description: String!
+            }
+
+            type Task {
                 id: String
                 title: String
                 description: String
-              }
+            }
 
-              type Issue {
+            type Issue {
                 id: String
                 title: String
-              }
+            }
 
-              type Query {
+            type Query {
                 tasks: Task
-              }
+            }
 
-              type Query {
+            type Query {
                 issues: Issue
-              }
+            }
             ");
 
             // loop through all types in schema to filter out custo types define by user
