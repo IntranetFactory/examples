@@ -11,38 +11,28 @@ namespace Assistant
         public AssistantQuery(AssistantData data)
         {
             var schema = Schema.For(@"
-            interface Status {
-                title: String!
-                link: String!
-                linkLabel: String!
-                actionable: Boolean!
-                value: Int!
-                color: String!
-                date: String!
-                description: String!
+            type taskStatus {
+                title: String
+                link: String
+                linkLabel: String
+                actionable: Boolean
+                value: Int
+                color: String
+                date: String
+                description: String
+                items: [Task]
             }
 
-            type taskStatus implements Status{
-                title: String!
-                link: String!
-                linkLabel: String!
-                actionable: Boolean!
-                value: Int!
-                color: String!
-                date: String!
-                description: String!
-                tmp: String!
-            }
-
-            type issuesStatus implements Status{
-                title: String!
-                link: String!
-                linkLabel: String!
-                actionable: Boolean!
-                value: Int!
-                color: String!
-                date: String!
-                description: String!
+            type issuesStatus {
+                title: String
+                link: String
+                linkLabel: String
+                actionable: Boolean
+                value: Int
+                color: String
+                date: String
+                description: String
+                items: [Issue]
             }
 
             type Task {
@@ -57,11 +47,11 @@ namespace Assistant
             }
 
             type Query {
-                tasks: Task
+                tasks: taskStatus
             }
 
             type Query {
-                issues: Issue
+                issues: issuesStatus
             }
             ");
 
@@ -105,7 +95,7 @@ namespace Assistant
                 AddField(
                 new FieldType()
                 {
-                    Name = f.Name + "xx",
+                    Name = f.Name,
                     ResolvedType = new ListGraphType(f.ResolvedType),
                     Arguments = new QueryArguments(
                         f.Arguments
@@ -113,17 +103,17 @@ namespace Assistant
 
                     // right now all queries return same result
                     // this should be discussed
-                    Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
+                    Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
                         return ReturnData(f.Name);
                     })
                 });
             }
 
-            List<dynamic> ReturnData(string name)
+            dynamic ReturnData(string name)
             {
+                dynamic response = new SimpleJson.JsonObject();
                 List<dynamic> dynamicList = new List<dynamic>();
-
                 List<dynamic> listToReturn = null;
 
                 if (name == "issues")
@@ -143,8 +133,17 @@ namespace Assistant
                     jo.title = item.Title;
                     dynamicList.Add(jo);
                 }
+                response.items = dynamicList;
+                response.value = dynamicList.Count;
+                response.title = name;
+                response.link = "google.com";
+                response.linkLabel = "all " + name;
+                response.actionable = dynamicList.Count > 1 ? true : false;
+                response.color = "blue";
+                response.date = new DateTime().ToJsonString();
+                response.description = "description of the " + name;
 
-                return dynamicList;
+                return response;
             }
 
             /*
