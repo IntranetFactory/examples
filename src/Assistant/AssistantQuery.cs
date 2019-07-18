@@ -47,11 +47,19 @@ namespace Assistant
             }
 
             type Query {
-                tasks: taskStatus
+                tasks: Task
             }
 
             type Query {
-                issues: issuesStatus
+                issues: Issue
+            }
+
+            type Query {
+                tasksState : taskStatus
+            }
+
+            type Query {
+                issueState: issuesStatus
             }
             ");
 
@@ -92,39 +100,81 @@ namespace Assistant
             // register queries and parameters
             foreach (FieldType f in schema.Query.Fields)
             {
-                AddField(
-                new FieldType()
-                {
-                    Name = f.Name,
-                    ResolvedType = new NonNullGraphType(f.ResolvedType),
-                    Arguments = new QueryArguments(
-                        f.Arguments
-                    ),
-
-                    // right now all queries return same result
-                    // this should be discussed
-                    Resolver = new FuncFieldResolver<dynamic>(ctx =>
-                    {
-                        return ReturnData(f.Name);
-                    })
-                });
+                AddField(GetFieldType(f));
             }
 
-            dynamic ReturnData(string name)
+            // decides if it should return list or single dynamic object based on name of the query
+            FieldType GetFieldType(FieldType f)
+            {
+                if (f.Name.Contains("State"))
+                {
+                    return new FieldType()
+                    {
+                        Name = f.Name,
+                        ResolvedType = new NonNullGraphType(f.ResolvedType),
+                        Arguments = new QueryArguments(
+                         f.Arguments
+                     ),
+
+                        // right now all queries return same result
+                        // this should be discussed
+                        Resolver = new FuncFieldResolver<dynamic>(ctx =>
+                        {
+                            return ReturnStatus(f.Name);
+                        })
+                    };
+                }
+                else
+                {
+                    return new FieldType()
+                    {
+                        Name = f.Name,
+                        ResolvedType = new ListGraphType(f.ResolvedType),
+                        Arguments = new QueryArguments(
+                          f.Arguments
+                      ),
+
+                        // right now all queries return same result
+                        // this should be discussed
+                        Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
+                        {
+                            return ReturnList(f.Name);
+                        })
+                    };
+                }
+            }
+            dynamic ReturnStatus(string name)
             {
                 dynamic response = new SimpleJson.JsonObject();
+
+                List<dynamic> items = ReturnList(name);
+
+                response.items = items;
+                response.value = items.Count;
+                response.title = name;
+                response.link = "google.com";
+                response.linkLabel = "all " + name;
+                response.actionable = items.Count > 1 ? true : false;
+                response.color = "blue";
+                response.date = new DateTime().ToJsonString();
+                response.description = "description of the " + name;
+
+                return response;
+            }
+
+            List<dynamic> ReturnList(string name)
+            {
                 List<dynamic> dynamicList = new List<dynamic>();
                 List<dynamic> listToReturn = null;
 
-                if (name == "issues")
+                if (name.Contains("issue"))
                 {
                     listToReturn = data.issueTestList;
                 }
-                else if (name == "tasks")
+                else if (name.Contains("tasks"))
                 {
                     listToReturn = data.taskTestList;
                 }
-
                 foreach (var item in listToReturn)
                 {
                     dynamic jo = new SimpleJson.JsonObject();
@@ -133,17 +183,8 @@ namespace Assistant
                     jo.title = item.Title;
                     dynamicList.Add(jo);
                 }
-                response.items = dynamicList;
-                response.value = dynamicList.Count;
-                response.title = name;
-                response.link = "google.com";
-                response.linkLabel = "all " + name;
-                response.actionable = dynamicList.Count > 1 ? true : false;
-                response.color = "blue";
-                response.date = new DateTime().ToJsonString();
-                response.description = "description of the " + name;
 
-                return response;
+                return dynamicList;
             }
 
             /*

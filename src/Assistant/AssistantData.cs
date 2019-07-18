@@ -79,18 +79,18 @@ namespace Assistant
             task3.Link = "link3";
 
             dynamic task4 = new SimpleJson.JsonObject();
-            task3.Id = "4";
-            task3.Title = "Task4";
-            task3.Description = "desc4";
-            task3.Date = DateTime.Now.ToString();
-            task3.Link = "link4";
+            task4.Id = "4";
+            task4.Title = "Task4";
+            task4.Description = "desc4";
+            task4.Date = DateTime.Now.ToString();
+            task4.Link = "link4";
 
             dynamic task5 = new SimpleJson.JsonObject();
-            task3.Id = "5";
-            task3.Title = "Task5";
-            task3.Description = "desc5";
-            task3.Date = DateTime.Now.ToString();
-            task3.Link = "link5";
+            task5.Id = "5";
+            task5.Title = "Task5";
+            task5.Description = "desc5";
+            task5.Date = DateTime.Now.ToString();
+            task5.Link = "link5";
 
             taskTestList.Add(task1);
             taskTestList.Add(task2);
