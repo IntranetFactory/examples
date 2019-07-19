@@ -17,8 +17,28 @@ namespace Assistant
             issue.Field(new StringGraphType().GetType(), "title");
 
             AddStatus(issue);
-
             schema.RegisterTypes(issue);
+
+            var task = new ObjectGraphType { Name = "Task" };
+            task.Field(new StringGraphType().GetType(), "id");
+            task.Field(new StringGraphType().GetType(), "title");
+            task.Field(new StringGraphType().GetType(), "description");
+            task.Field(new StringGraphType().GetType(), "date");
+
+            schema.RegisterTypes(task);
+
+            var taskStatus = new ObjectGraphType { Name = "TaskStatus" };
+            taskStatus.Field(new StringGraphType().GetType(), "title");
+            taskStatus.Field(new StringGraphType().GetType(), "link");
+            taskStatus.Field(new StringGraphType().GetType(), "linkLabel");
+            taskStatus.Field(new BooleanGraphType().GetType(), "actionable");
+            taskStatus.Field(new IntGraphType().GetType(), "value");
+            taskStatus.Field(new StringGraphType().GetType(), "color");
+            taskStatus.Field(new StringGraphType().GetType(), "date");
+            taskStatus.Field(new StringGraphType().GetType(), "description");
+
+            AddItems(taskStatus, task);
+            schema.RegisterTypes(taskStatus);
 
             // loop through all types in schema to filter out custo types define by user
             var allTypes = schema.AllTypes.ToList();
@@ -148,18 +168,9 @@ namespace Assistant
 
                 return dynamicList;
             }
-
             void AddStatus(ObjectGraphType typeToEdit)
             {
-                // create copy of the type to use it in the list
-                // so we do not have Issue.List<Issue>
-                ObjectGraphType tmp = new ObjectGraphType();
-                foreach (FieldType f in typeToEdit.Fields)
-                {
-                    tmp.AddField(f);
-                }
-
-                // title already exists in Issue
+                // title already exists in Issue we should probably check for each field if it exists in type
                 //typeToEdit.Field(new StringGraphType().GetType(), "title");
                 typeToEdit.Field(new StringGraphType().GetType(), "link");
                 typeToEdit.Field(new StringGraphType().GetType(), "linkLabel");
@@ -168,8 +179,37 @@ namespace Assistant
                 typeToEdit.Field(new StringGraphType().GetType(), "color");
                 typeToEdit.Field(new StringGraphType().GetType(), "date");
                 typeToEdit.Field(new StringGraphType().GetType(), "description");
-                //typeToEdit.Field(new ListGraphType(tmp).GetType(), "items");
-                // this last line breaks schema, i'm trying to figure it out
+            }
+
+            void AddItems(ObjectGraphType typeToEdit, IGraphType typeOfItems)
+            {
+                // this is example from :
+                //https://github.com/graphql-dotnet/graphql-dotnet/blob/e27623aaea70a73e1a5fa6dc49b3691d34059b05/src/GraphQL.Tests/Execution/RegisteredInstanceTests.cs#L51
+                // it's not working
+                /*
+                var person = new ObjectGraphType { Name = "Person" };
+                person.Field(new StringGraphType().GetType(), "name");
+                person.Field(
+                    new ListGraphType(person).GetType(),
+                    "friends",
+                    "description of the person",
+                    arguments: new QueryArguments(
+                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "name", Description = "Id of the issue" }
+                    ),
+                    resolve: ctx => new[] { new { Name = "Jaime" }, new { Name = "Joe" } });
+
+                schema.RegisterTypes(person);
+
+                var root = new ObjectGraphType { Name = "Root" };
+                root.Field(person.GetType(), "hero", resolve: ctx => ctx.RootValue);
+                schema.Query = root;
+                */
+
+                // it should be this sipmle to add new ListGraphType from everything that I saw
+                // but its not working
+                typeToEdit.Field(new ListGraphType(typeOfItems).GetType(), "items");
+
+                schema.RegisterTypes(typeToEdit);
             }
         }
     }
