@@ -10,7 +10,7 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
-            /*
+            
             var schema = Schema.For(@"
             type taskStatus {
                 title: String
@@ -63,21 +63,11 @@ namespace Assistant
                 issueState: issuesStatus
             }
             ");
-            */
-            var schema = new Schema();
+            
+            var type = schema.FindType("Issue") as ObjectGraphType;
+            AddStatus(type);
 
-            var person = new ObjectGraphType { Name = "Person" };
-            person.Field(new StringGraphType().GetType(), "name");
-            person.Field(
-                new ListGraphType(new NonNullGraphType(person)).GetType(),
-                "friends",
-                resolve: ctx => new[] { new { Name = "Jaime" }, new { Name = "Joe" } });
-
-            var root = new ObjectGraphType { Name = "Root" };
-            root.Field(person.GetType(), "hero", resolve: ctx => ctx.RootValue);
-
-            schema.Query = root;
-            schema.RegisterType(person);
+            
 
             // loop through all types in schema to filter out custo types define by user
             var allTypes = schema.AllTypes.ToList();
@@ -113,12 +103,31 @@ namespace Assistant
                 }
             }
 
-            // register queries and parameters
-            foreach (FieldType f in schema.Query.Fields)
+            if (schema.Query != null)
             {
-                AddField(GetFieldType(f));
+                // register queries and parameters
+                foreach (FieldType f in schema.Query.Fields)
+                {
+                    AddField(GetFieldType(f));
+                }
             }
 
+            void AddStatus(ObjectGraphType typeToEdit)
+            {
+                // title already exists in Issue
+                //typeToEdit.Field(new StringGraphType().GetType(), "title");
+                typeToEdit.Field(new StringGraphType().GetType(), "link");
+                typeToEdit.Field(new StringGraphType().GetType(), "linkLabel");
+                typeToEdit.Field(new BooleanGraphType().GetType(), "actionable");
+                typeToEdit.Field(new IntGraphType().GetType(), "value");
+                typeToEdit.Field(new StringGraphType().GetType(), "color");
+                typeToEdit.Field(new StringGraphType().GetType(), "date");
+                typeToEdit.Field(new StringGraphType().GetType(), "description");
+                //typeToEdit.Field(new ListGraphType(typeToEdit.GetType()), "items");
+                // this last line is showing errors
+
+                schema.RegisterTypes(type);
+            }
             // decides if it should return list or single dynamic object based on name of the query
             FieldType GetFieldType(FieldType f)
             {
@@ -159,6 +168,7 @@ namespace Assistant
                     };
                 }
             }
+
             dynamic ReturnStatus(string name)
             {
                 dynamic response = new SimpleJson.JsonObject();
