@@ -10,64 +10,15 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
-            
-            var schema = Schema.For(@"
-            type taskStatus {
-                title: String
-                link: String
-                linkLabel: String
-                actionable: Boolean
-                value: Int
-                color: String
-                date: String
-                description: String
-                items: [Task]
-            }
+            var schema = new Schema();
 
-            type issuesStatus {
-                title: String
-                link: String
-                linkLabel: String
-                actionable: Boolean
-                value: Int
-                color: String
-                date: String
-                description: String
-                items: [Issue]
-            }
+            var issue = new ObjectGraphType { Name = "Issue" };
+            issue.Field(new StringGraphType().GetType(), "id");
+            issue.Field(new StringGraphType().GetType(), "title");
 
-            type Task {
-                id: String
-                title: String
-                description: String
-            }
+            AddStatus(issue);
 
-            type Issue {
-                id: String
-                title: String
-            }
-
-            type Query {
-                tasks: Task
-            }
-
-            type Query {
-                issues: Issue
-            }
-
-            type Query {
-                tasksState : taskStatus
-            }
-
-            type Query {
-                issueState: issuesStatus
-            }
-            ");
-            
-            var type = schema.FindType("Issue") as ObjectGraphType;
-            AddStatus(type);
-
-            
+            schema.RegisterTypes(issue);
 
             // loop through all types in schema to filter out custo types define by user
             var allTypes = schema.AllTypes.ToList();
@@ -112,22 +63,7 @@ namespace Assistant
                 }
             }
 
-            void AddStatus(ObjectGraphType typeToEdit)
-            {
-                // title already exists in Issue
-                //typeToEdit.Field(new StringGraphType().GetType(), "title");
-                typeToEdit.Field(new StringGraphType().GetType(), "link");
-                typeToEdit.Field(new StringGraphType().GetType(), "linkLabel");
-                typeToEdit.Field(new BooleanGraphType().GetType(), "actionable");
-                typeToEdit.Field(new IntGraphType().GetType(), "value");
-                typeToEdit.Field(new StringGraphType().GetType(), "color");
-                typeToEdit.Field(new StringGraphType().GetType(), "date");
-                typeToEdit.Field(new StringGraphType().GetType(), "description");
-                //typeToEdit.Field(new ListGraphType(typeToEdit.GetType()), "items");
-                // this last line is showing errors
 
-                schema.RegisterTypes(type);
-            }
             // decides if it should return list or single dynamic object based on name of the query
             FieldType GetFieldType(FieldType f)
             {
@@ -213,62 +149,28 @@ namespace Assistant
                 return dynamicList;
             }
 
-            /*
-            Name = "Query";
+            void AddStatus(ObjectGraphType typeToEdit)
+            {
+                // create copy of the type to use it in the list
+                // so we do not have Issue.List<Issue>
+                ObjectGraphType tmp = new ObjectGraphType();
+                foreach (FieldType f in typeToEdit.Fields)
+                {
+                    tmp.AddField(f);
+                }
 
-            Field<IssueType>(
-                "issue",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "id", Description = "Id of the issue" }
-                ),
-                resolve: context => data.GetIssueByIdAsync(context.GetArgument<string>("id"))
-            );
-
-            Field<ListGraphType<IssueType>>(
-                "myissues",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
-                ),
-
-                resolve: context => data.GetIssuesFromEndpoint(context.GetArgument<string>("startdate"),
-                                                    context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
-            );
-
-            Field<ListGraphType<IssueType>>(
-                "openissues",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
-                ),
-
-                resolve: context => data.GetOpenIssuesFromEndpoint(context.GetArgument<string>("startdate"),
-                                                    context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
-            );
-
-            Field<ListGraphType<IssueType>>(
-                "myissuesstatic",
-                arguments: new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "page", Description = "Page of the response" },
-                    new QueryArgument<IntGraphType> { Name = "pagesize", Description = "Page size of the response" }
-                ),
-
-                resolve: context => data.GetIssuesFromStaticList(context.GetArgument<string>("startdate"),
-                                                    context.GetArgument<string>("enddate"),
-                                                    context.GetArgument<int>("page"),
-                                                    context.GetArgument<int>("pagesize"))
-            );
-            */
+                // title already exists in Issue
+                //typeToEdit.Field(new StringGraphType().GetType(), "title");
+                typeToEdit.Field(new StringGraphType().GetType(), "link");
+                typeToEdit.Field(new StringGraphType().GetType(), "linkLabel");
+                typeToEdit.Field(new BooleanGraphType().GetType(), "actionable");
+                typeToEdit.Field(new IntGraphType().GetType(), "value");
+                typeToEdit.Field(new StringGraphType().GetType(), "color");
+                typeToEdit.Field(new StringGraphType().GetType(), "date");
+                typeToEdit.Field(new StringGraphType().GetType(), "description");
+                //typeToEdit.Field(new ListGraphType(tmp).GetType(), "items");
+                // this last line breaks schema, i'm trying to figure it out
+            }
         }
     }
 }
