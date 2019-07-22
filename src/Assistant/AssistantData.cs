@@ -236,7 +236,7 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public List<dynamic> GetItemsFromStaticList(string name, string _startDate, string _endDate, int first, int offset)
+        public dynamic GetItemsFromStaticList(string name, string _startDate, string _endDate, int first, int offset)
         {
             List<dynamic> listToReturn = null;
 
@@ -295,13 +295,15 @@ namespace Assistant
                     paginatedItems.Add(filteredByDateTime[i]);
                 }
             }
+            dynamic response = new SimpleJson.JsonObject();
+            response.value = filteredByDateTime.Count;
 
             if (paginatedItems == null)
             {
                 paginatedItems = filteredByDateTime;
             }
 
-            List<dynamic> dynamicList = new List<dynamic>();
+            List<dynamic> items = new List<dynamic>();
             foreach (var item in paginatedItems)
             {
                 dynamic jo = new SimpleJson.JsonObject();
@@ -309,10 +311,11 @@ namespace Assistant
                 jo.title = item.Title;
                 jo.description = item.Description;
                 jo.date = item.Date;
-                dynamicList.Add(jo);
+                items.Add(jo);
             }
+            response.items = items;
 
-            return dynamicList;
+            return response;
         }
 
         public dynamic AddIssue(dynamic _issue)

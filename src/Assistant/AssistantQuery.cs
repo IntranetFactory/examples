@@ -15,9 +15,25 @@ namespace Assistant
             var issue = new ObjectGraphType { Name = "Issue" };
             issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
             issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
+            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
+            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
 
-            AddStatus(issue);
+            // I'm not sure why this was requested
+            //AddStatus(issue);
             schema.RegisterTypes(issue);
+
+            var issueStatus = new ObjectGraphType { Name = "IssueStatus" };
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
+            issueStatus.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
+            issueStatus.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
+            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
+
+            AddItems(issueStatus, issue);
+            schema.RegisterTypes(issueStatus);
 
             var task = new ObjectGraphType { Name = "Task" };
             task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
@@ -53,6 +69,17 @@ namespace Assistant
                     new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
                     new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
                 )
+            });
+            root.AddField(new FieldType
+            {
+                ResolvedType = issueStatus,
+                Name = "issueState",
+                Arguments = new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
+                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
+                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
+                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
+    )
             });
             schema.Query = root;
 
@@ -127,7 +154,7 @@ namespace Assistant
                     field.Arguments = new QueryArguments(f.Arguments);
                     field.Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
                     {
-                        return data.GetItemsFromStaticList(f.Name,
+                        return ReturnItems(f.Name,
                             ctx.GetArgument<string>("startdate"),
                             ctx.GetArgument<string>("enddate"),
                             ctx.GetArgument<int>("first"),
@@ -142,21 +169,26 @@ namespace Assistant
             {
                 dynamic response = new SimpleJson.JsonObject();
 
-                List<dynamic> items = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
+                dynamic staticData = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
 
-                response.items = items;
-                response.value = items.Count;
+                response.items = staticData.items;
+                response.value = staticData.value;
                 response.title = name;
                 response.link = "google.com";
                 response.linkLabel = "all " + name;
-                response.actionable = items.Count > 1 ? true : false;
+                response.actionable = staticData.Count > 1 ? true : false;
                 response.color = "blue";
                 response.date = new DateTime().ToJsonString();
                 response.description = "description of the " + name;
 
                 return response;
             }
+            List<dynamic> ReturnItems(string name, string startDate, string endDate, int first, int offset)
+            {
+                dynamic staticData = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
 
+                return staticData.items;
+            }
             void AddStatus(ObjectGraphType typeToEdit)
             {
                 // title already exists in Issue we should probably check for each field if it exists in type
