@@ -13,32 +13,38 @@ namespace Assistant
             var schema = new Schema();
 
             var issue = new ObjectGraphType { Name = "Issue" };
-            issue.Field(new StringGraphType().GetType(), "id");
-            issue.Field(new StringGraphType().GetType(), "title");
+            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
+            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
 
             AddStatus(issue);
             schema.RegisterTypes(issue);
 
             var task = new ObjectGraphType { Name = "Task" };
-            task.Field(new StringGraphType().GetType(), "id");
-            task.Field(new StringGraphType().GetType(), "title");
-            task.Field(new StringGraphType().GetType(), "description");
-            task.Field(new StringGraphType().GetType(), "date");
+            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
+            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
+            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
+            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
 
             schema.RegisterTypes(task);
 
             var taskStatus = new ObjectGraphType { Name = "TaskStatus" };
-            taskStatus.Field(new StringGraphType().GetType(), "title");
-            taskStatus.Field(new StringGraphType().GetType(), "link");
-            taskStatus.Field(new StringGraphType().GetType(), "linkLabel");
-            taskStatus.Field(new BooleanGraphType().GetType(), "actionable");
-            taskStatus.Field(new IntGraphType().GetType(), "value");
-            taskStatus.Field(new StringGraphType().GetType(), "color");
-            taskStatus.Field(new StringGraphType().GetType(), "date");
-            taskStatus.Field(new StringGraphType().GetType(), "description");
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
+            taskStatus.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
+            taskStatus.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
+            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
 
             AddItems(taskStatus, task);
             schema.RegisterTypes(taskStatus);
+
+            // add 'taskState' query to the schema
+            var root = new ObjectGraphType ();
+            root.Name = "Root";
+            root.AddField(new FieldType { ResolvedType = taskStatus, Name = "taskState"});
+            schema.Query = root;
 
             // loop through all types in schema to filter out custo types define by user
             var allTypes = schema.AllTypes.ToList();
@@ -83,45 +89,42 @@ namespace Assistant
                 }
             }
 
-
             // decides if it should return list or single dynamic object based on name of the query
             FieldType GetFieldType(FieldType f)
             {
                 if (f.Name.Contains("State"))
                 {
-                    return new FieldType()
+                    FieldType field = new FieldType();
+                    field.Name = f.Name;
+                    field.ResolvedType = new NonNullGraphType(f.ResolvedType);
+                    field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
-                        Name = f.Name,
-                        ResolvedType = new NonNullGraphType(f.ResolvedType),
-                        Arguments = new QueryArguments(
+                        return ReturnStatus(f.Name);
+                    });
+                    if (f.Arguments != null)
+                    {
+                        field.Arguments = new QueryArguments(
                          f.Arguments
-                     ),
-
-                        // right now all queries return same result
-                        // this should be discussed
-                        Resolver = new FuncFieldResolver<dynamic>(ctx =>
-                        {
-                            return ReturnStatus(f.Name);
-                        })
-                    };
+                      );
+                    }
+                    return field;
                 }
                 else
                 {
-                    return new FieldType()
+                    FieldType field = new FieldType();
+                    field.Name = f.Name;
+                    field.ResolvedType = new NonNullGraphType(f.ResolvedType);
+                    field.Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
                     {
-                        Name = f.Name,
-                        ResolvedType = new ListGraphType(f.ResolvedType),
-                        Arguments = new QueryArguments(
-                          f.Arguments
-                      ),
-
-                        // right now all queries return same result
-                        // this should be discussed
-                        Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
-                        {
-                            return ReturnList(f.Name);
-                        })
-                    };
+                        return ReturnList(f.Name);
+                    });
+                    if (f.Arguments != null)
+                    {
+                        field.Arguments = new QueryArguments(
+                         f.Arguments
+                      );
+                    }
+                    return field;
                 }
             }
 
@@ -153,7 +156,7 @@ namespace Assistant
                 {
                     listToReturn = data.issueTestList;
                 }
-                else if (name.Contains("tasks"))
+                else if (name.Contains("task"))
                 {
                     listToReturn = data.taskTestList;
                 }
@@ -172,56 +175,17 @@ namespace Assistant
             {
                 // title already exists in Issue we should probably check for each field if it exists in type
                 //typeToEdit.Field(new StringGraphType().GetType(), "title");
-                typeToEdit.Field(new StringGraphType().GetType(), "link");
-                typeToEdit.Field(new StringGraphType().GetType(), "linkLabel");
-                typeToEdit.Field(new BooleanGraphType().GetType(), "actionable");
-                typeToEdit.Field(new IntGraphType().GetType(), "value");
-                typeToEdit.Field(new StringGraphType().GetType(), "color");
-                typeToEdit.Field(new StringGraphType().GetType(), "date");
-                typeToEdit.Field(new StringGraphType().GetType(), "description");
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
             }
 
             void AddItems(ObjectGraphType typeToEdit, IGraphType typeOfItems)
             {
-                // this is example from :
-                //https://github.com/graphql-dotnet/graphql-dotnet/blob/e27623aaea70a73e1a5fa6dc49b3691d34059b05/src/GraphQL.Tests/Execution/RegisteredInstanceTests.cs#L51
-                // it's not working
-                /*
-                var person = new ObjectGraphType { Name = "Person" };
-                person.Field(new StringGraphType().GetType(), "name");
-                person.Field(
-                    new ListGraphType(person).GetType(),
-                    "friends",
-                    "description of the person",
-                    arguments: new QueryArguments(
-                        new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "name", Description = "Id of the issue" }
-                    ),
-                    resolve: ctx => new[] { new { Name = "Jaime" }, new { Name = "Joe" } });
-
-                schema.RegisterTypes(person);
-
-                var root = new ObjectGraphType { Name = "Root" };
-                root.Field(person.GetType(), "hero", resolve: ctx => ctx.RootValue);
-                schema.Query = root;
-                */
-
-                // it should be this sipmle to add new ListGraphType from everything that I saw
-                // but its not working
-                /*
-                typeToEdit.Field<ListGraphType<IssueType>>(
-                    "items2",
-                    null,
-                    resolve: context => data.taskTestList.ToList()
-                );
-                */
-                /*
-                typeToEdit.Field(new ListGraphType(typeOfItems).GetType(),
-                    "items",
-                    null,
-                    null,
-                    resolve: context => data.taskTestList.ToList());
-
-                */
                 FieldType itemsField = new FieldType();
                 itemsField.Name = "items";
                 itemsField.ResolvedType = new ListGraphType(typeOfItems);
@@ -229,22 +193,4 @@ namespace Assistant
             }
         }
     }
-
-    // code temporarily used for testing dynamicly adding ListGraphType Field to the Type
-    /*
-    public abstract class Entity
-    {
-        public string Id { get; set; }
-    }
-
-    public abstract class item
-    {
-        public string Id { get; set; }
-        public string id { get; set; }
-    }
-
-    public class IssueType : ObjectGraphType<item>
-    {
-    }
-    */
 }
