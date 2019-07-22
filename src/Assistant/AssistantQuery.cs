@@ -41,9 +41,19 @@ namespace Assistant
             schema.RegisterTypes(taskStatus);
 
             // add 'taskState' query to the schema
-            var root = new ObjectGraphType ();
+            var root = new ObjectGraphType();
             root.Name = "Root";
-            root.AddField(new FieldType { ResolvedType = taskStatus, Name = "taskState"});
+            root.AddField(new FieldType
+            {
+                ResolvedType = taskStatus,
+                Name = "taskState",
+                Arguments = new QueryArguments(
+                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
+                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
+                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
+                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
+                )
+            });
             schema.Query = root;
 
             // loop through all types in schema to filter out custo types define by user
@@ -97,16 +107,16 @@ namespace Assistant
                     FieldType field = new FieldType();
                     field.Name = f.Name;
                     field.ResolvedType = new NonNullGraphType(f.ResolvedType);
+                    field.Arguments = new QueryArguments(f.Arguments);
                     field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
-                        return ReturnStatus(f.Name);
+                        return ReturnStatus(f.Name,
+                            ctx.GetArgument<string>("startdate"),
+                            ctx.GetArgument<string>("enddate"),
+                            ctx.GetArgument<int>("first"),
+                            ctx.GetArgument<int>("offset"));
                     });
-                    if (f.Arguments != null)
-                    {
-                        field.Arguments = new QueryArguments(
-                         f.Arguments
-                      );
-                    }
+
                     return field;
                 }
                 else
@@ -114,25 +124,25 @@ namespace Assistant
                     FieldType field = new FieldType();
                     field.Name = f.Name;
                     field.ResolvedType = new NonNullGraphType(f.ResolvedType);
+                    field.Arguments = new QueryArguments(f.Arguments);
                     field.Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
                     {
-                        return ReturnList(f.Name);
+                        return data.GetItemsFromStaticList(f.Name,
+                            ctx.GetArgument<string>("startdate"),
+                            ctx.GetArgument<string>("enddate"),
+                            ctx.GetArgument<int>("first"),
+                            ctx.GetArgument<int>("offset"));
                     });
-                    if (f.Arguments != null)
-                    {
-                        field.Arguments = new QueryArguments(
-                         f.Arguments
-                      );
-                    }
+
                     return field;
                 }
             }
 
-            dynamic ReturnStatus(string name)
+            dynamic ReturnStatus(string name, string startDate, string endDate, int first, int offset)
             {
                 dynamic response = new SimpleJson.JsonObject();
 
-                List<dynamic> items = ReturnList(name);
+                List<dynamic> items = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
 
                 response.items = items;
                 response.value = items.Count;
@@ -147,30 +157,6 @@ namespace Assistant
                 return response;
             }
 
-            List<dynamic> ReturnList(string name)
-            {
-                List<dynamic> dynamicList = new List<dynamic>();
-                List<dynamic> listToReturn = null;
-
-                if (name.Contains("issue"))
-                {
-                    listToReturn = data.issueTestList;
-                }
-                else if (name.Contains("task"))
-                {
-                    listToReturn = data.taskTestList;
-                }
-                foreach (var item in listToReturn)
-                {
-                    dynamic jo = new SimpleJson.JsonObject();
-                    jo.Id = item.Id;
-                    jo.id = item.Id;
-                    jo.title = item.Title;
-                    dynamicList.Add(jo);
-                }
-
-                return dynamicList;
-            }
             void AddStatus(ObjectGraphType typeToEdit)
             {
                 // title already exists in Issue we should probably check for each field if it exists in type

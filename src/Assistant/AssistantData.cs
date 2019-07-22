@@ -20,35 +20,35 @@ namespace Assistant
             issue1.Id = "1";
             issue1.Title = "Issue1";
             issue1.Description = "desc1";
-            issue1.Date = DateTime.Now.ToString();
+            issue1.Date = DateTime.Now.ToJsonString();
             issue1.Link = "link1";
 
             dynamic issue2 = new SimpleJson.JsonObject();
             issue2.Id = "2";
             issue2.Title = "Issue2";
             issue2.Description = "desc2";
-            issue2.Date = DateTime.Now.ToString();
+            issue2.Date = DateTime.Now.ToJsonString();
             issue2.Link = "link2";
 
             dynamic issue3 = new SimpleJson.JsonObject();
             issue3.Id = "3";
             issue3.Title = "Issue3";
             issue3.Description = "desc3";
-            issue3.Date = DateTime.Now.ToString();
+            issue3.Date = DateTime.Now.ToJsonString();
             issue3.Link = "link3";
 
             dynamic issue4 = new SimpleJson.JsonObject();
             issue4.Id = "4";
             issue4.Title = "Issue4";
             issue4.Description = "desc4";
-            issue4.Date = DateTime.Now.ToString();
+            issue4.Date = DateTime.Now.ToJsonString();
             issue4.Link = "link4";
 
             dynamic issue5 = new SimpleJson.JsonObject();
             issue5.Id = "5";
             issue5.Title = "Issue5";
             issue5.Description = "desc5";
-            issue5.Date = DateTime.Now.ToString();
+            issue5.Date = DateTime.Now.ToJsonString();
             issue5.Link = "link5";
 
             issueTestList.Add(issue1);
@@ -61,35 +61,35 @@ namespace Assistant
             task1.Id = "1";
             task1.Title = "Task1";
             task1.Description = "desc1";
-            task1.Date = DateTime.Now.ToString();
+            task1.Date = DateTime.Now.ToJsonString();
             task1.Link = "link1";
 
             dynamic task2 = new SimpleJson.JsonObject();
             task2.Id = "2";
             task2.Title = "Task2";
             task2.Description = "desc2";
-            task2.Date = DateTime.Now.ToString();
+            task2.Date = DateTime.Now.ToJsonString();
             task2.Link = "link2";
 
             dynamic task3 = new SimpleJson.JsonObject();
             task3.Id = "3";
             task3.Title = "Task3";
             task3.Description = "desc3";
-            task3.Date = DateTime.Now.ToString();
+            task3.Date = DateTime.Now.ToJsonString();
             task3.Link = "link3";
 
             dynamic task4 = new SimpleJson.JsonObject();
             task4.Id = "4";
             task4.Title = "Task4";
             task4.Description = "desc4";
-            task4.Date = DateTime.Now.ToString();
+            task4.Date = DateTime.Now.ToJsonString();
             task4.Link = "link4";
 
             dynamic task5 = new SimpleJson.JsonObject();
             task5.Id = "5";
             task5.Title = "Task5";
             task5.Description = "desc5";
-            task5.Date = DateTime.Now.ToString();
+            task5.Date = DateTime.Now.ToJsonString();
             task5.Link = "link5";
 
             taskTestList.Add(task1);
@@ -236,60 +236,83 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public Task<List<dynamic>> GetIssuesFromStaticList(string _startDate, string _endDate, int page, int pageSize)
+        public List<dynamic> GetItemsFromStaticList(string name, string _startDate, string _endDate, int first, int offset)
         {
-            DateTime? startDate = null;
-            DateTime? endDate = null;
-            List<dynamic> filteredByDateTime = new List<dynamic>();
-            List<dynamic> paginatedItems = new List<dynamic>();
+            List<dynamic> listToReturn = null;
 
-            if (!string.IsNullOrEmpty(_startDate))
+            if (name.Contains("issue"))
             {
-                startDate = _startDate.ToDateTime();
+                listToReturn = issueTestList;
             }
-            
-            if (!string.IsNullOrEmpty(_endDate))
+            else if (name.Contains("task"))
             {
-                endDate = _endDate.ToDateTime();
+                listToReturn = taskTestList;
             }
 
-            //// filter by daterange            
-            //if (startDate != null && endDate != null)
-            //{
-            //    for (int i = 0; i < testlist.Count; i++)
-            //    {
-            //        DateTime d = testlist[i].Date.ToDateTime();
-            //        if (d > startDate && d < endDate)
-            //        {
-            //            filteredByDateTime.Add(testlist[i]);
-            //        }
-            //    }
-            //}
-            
-            //if (page > 0 && pageSize > 0)
-            //{
-            //    int offset = (page - 1) * pageSize;
+            // filter by daterange
+            List<dynamic> filteredByDateTime = null;
+            if (!string.IsNullOrEmpty(_startDate) && !string.IsNullOrEmpty(_endDate))
+            {
+                DateTime startDate = _startDate.ToDateTime();
+                DateTime endDate = _endDate.ToDateTime();
 
-            //    for (int i = offset; i < offset + pageSize; i++)
-            //    {
-            //        if (i >= filteredByDateTime.Count)
-            //        {
-            //            break;
-            //        }
-            //        paginatedItems.Add(filteredByDateTime[i]);
-            //    }
-            //}
+                filteredByDateTime = new List<dynamic>();
+                for (int i = 0; i < listToReturn.Count; i++)
+                {
+                    string s = listToReturn[i].Date.ToString();
+                    DateTime d = s.ToDateTime();
+                    if (d > startDate && d < endDate)
+                    {
+                        filteredByDateTime.Add(listToReturn[i]);
+                    }
+                }
+            }
 
-            foreach(var item in issueTestList)
+            if (filteredByDateTime == null)
+            {
+                filteredByDateTime = listToReturn;
+            }
+
+            int page = 0;
+            if (offset > 0)
+            {
+                page = offset / first;
+            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            List<dynamic> paginatedItems = null;
+            if (first > 0)
+            {
+                paginatedItems = new List<dynamic>();
+
+                for (int i = offset; i < offset + first; i++)
+                {
+                    if (i >= filteredByDateTime.Count)
+                    {
+                        break;
+                    }
+                    paginatedItems.Add(filteredByDateTime[i]);
+                }
+            }
+
+            if (paginatedItems == null)
+            {
+                paginatedItems = filteredByDateTime;
+            }
+
+            List<dynamic> dynamicList = new List<dynamic>();
+            foreach (var item in paginatedItems)
             {
                 dynamic jo = new SimpleJson.JsonObject();
-                jo.Id = item.Id;
                 jo.id = item.Id;
                 jo.title = item.Title;
-                paginatedItems.Add(jo);
+                jo.description = item.Description;
+                jo.date = item.Date;
+                dynamicList.Add(jo);
             }
 
-            return Task.FromResult(paginatedItems);
+            return dynamicList;
         }
 
         public dynamic AddIssue(dynamic _issue)
