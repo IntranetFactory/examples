@@ -207,10 +207,44 @@ namespace Assistant
 
                 // it should be this sipmle to add new ListGraphType from everything that I saw
                 // but its not working
-                typeToEdit.Field(new ListGraphType(typeOfItems).GetType(), "items");
+                /*
+                typeToEdit.Field<ListGraphType<IssueType>>(
+                    "items2",
+                    null,
+                    resolve: context => data.taskTestList.ToList()
+                );
+                */
+                /*
+                typeToEdit.Field(new ListGraphType(typeOfItems).GetType(),
+                    "items",
+                    null,
+                    null,
+                    resolve: context => data.taskTestList.ToList());
 
-                schema.RegisterTypes(typeToEdit);
+                */
+                FieldType itemsField = new FieldType();
+                itemsField.Name = "items";
+                itemsField.ResolvedType = new ListGraphType(typeOfItems);
+                typeToEdit.AddField(itemsField);
             }
         }
     }
+
+    // code temporarily used for testing dynamicly adding ListGraphType Field to the Type
+    /*
+    public abstract class Entity
+    {
+        public string Id { get; set; }
+    }
+
+    public abstract class item
+    {
+        public string Id { get; set; }
+        public string id { get; set; }
+    }
+
+    public class IssueType : ObjectGraphType<item>
+    {
+    }
+    */
 }
