@@ -1,3 +1,4 @@
+using GraphQL.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -236,8 +237,29 @@ namespace Assistant
             return Task.FromResult(issues);
         }
 
-        public dynamic GetItemsFromStaticList(string name, string _startDate, string _endDate, int first, int offset)
+        public dynamic GetItemsFromStaticList(string name, ResolveFieldContext ctx)
         {
+            string _startDate = "";
+            string _endDate = "";
+            int first = 0;
+            int offset = 0;
+
+            if (ctx.HasArgument("startdate") && ctx.HasArgument("enddate"))
+            {
+                _startDate = ctx.GetArgument<string>("startdate");
+                _endDate = ctx.GetArgument<string>("enddate");
+            }
+
+            if (ctx.HasArgument("first"))
+            {
+                first = ctx.GetArgument<int>("first");
+            }
+
+            if (ctx.HasArgument("offset"))
+            {
+                offset = ctx.GetArgument<int>("offset");
+            }
+
             List<dynamic> listToReturn = null;
 
             if (name.Contains("issue"))

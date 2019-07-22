@@ -13,74 +13,44 @@ namespace Assistant
             var schema = new Schema();
 
             var issue = new ObjectGraphType { Name = "Issue" };
-            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
-            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
-            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
-            issue.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
-
-            // I'm not sure why this was requested
-            //AddStatus(issue);
+            AddStandardItemProperties(issue);
             schema.RegisterTypes(issue);
 
             var issueStatus = new ObjectGraphType { Name = "IssueStatus" };
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
-            issueStatus.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
-            issueStatus.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
-            issueStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
-
+            AddStatus(issueStatus);
             AddItems(issueStatus, issue);
             schema.RegisterTypes(issueStatus);
 
             var task = new ObjectGraphType { Name = "Task" };
-            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
-            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
-            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
-            task.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
-
+            AddStandardItemProperties(task);
             schema.RegisterTypes(task);
 
             var taskStatus = new ObjectGraphType { Name = "TaskStatus" };
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
-            taskStatus.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
-            taskStatus.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
-            taskStatus.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
-
+            AddStatus(taskStatus);
             AddItems(taskStatus, task);
             schema.RegisterTypes(taskStatus);
 
             // add 'taskState' query to the schema
             var root = new ObjectGraphType();
+
             root.Name = "Root";
-            root.AddField(new FieldType
-            {
-                ResolvedType = taskStatus,
-                Name = "taskState",
-                Arguments = new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
-                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
-                )
-            });
-            root.AddField(new FieldType
-            {
-                ResolvedType = issueStatus,
-                Name = "issueState",
-                Arguments = new QueryArguments(
-                    new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" },
-                    new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" },
-                    new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." },
-                    new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." }
-    )
-            });
+
+            FieldType taskState = new FieldType();
+            taskState.Name = "taskState";
+            taskState.ResolvedType = taskStatus;
+            taskState.Arguments = new QueryArguments();
+            AddDateRange(taskState);
+            AddPagination(taskState);
+            root.AddField(taskState);
+
+            FieldType issueState = new FieldType();
+            issueState.Name = "issueState";
+            issueState.ResolvedType = issueStatus;
+            issueState.Arguments = new QueryArguments();
+            AddDateRange(issueState);
+            AddPagination(issueState);
+            root.AddField(issueState);
+
             schema.Query = root;
 
             // loop through all types in schema to filter out custo types define by user
@@ -129,70 +99,88 @@ namespace Assistant
             // decides if it should return list or single dynamic object based on name of the query
             FieldType GetFieldType(FieldType f)
             {
+                FieldType field = new FieldType();
+                field.Name = f.Name;
+                field.ResolvedType = new NonNullGraphType(f.ResolvedType);
+                field.Arguments = new QueryArguments(f.Arguments);
+
                 if (f.Name.Contains("State"))
                 {
-                    FieldType field = new FieldType();
-                    field.Name = f.Name;
-                    field.ResolvedType = new NonNullGraphType(f.ResolvedType);
-                    field.Arguments = new QueryArguments(f.Arguments);
                     field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
-                        return ReturnStatus(f.Name,
-                            ctx.GetArgument<string>("startdate"),
-                            ctx.GetArgument<string>("enddate"),
-                            ctx.GetArgument<int>("first"),
-                            ctx.GetArgument<int>("offset"));
+                        return ReturnStatus(f.Name, ctx);
                     });
 
                     return field;
                 }
                 else
                 {
-                    FieldType field = new FieldType();
-                    field.Name = f.Name;
-                    field.ResolvedType = new NonNullGraphType(f.ResolvedType);
-                    field.Arguments = new QueryArguments(f.Arguments);
                     field.Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
                     {
-                        return ReturnItems(f.Name,
-                            ctx.GetArgument<string>("startdate"),
-                            ctx.GetArgument<string>("enddate"),
-                            ctx.GetArgument<int>("first"),
-                            ctx.GetArgument<int>("offset"));
+                        return ReturnItems(f.Name, ctx);
                     });
 
                     return field;
                 }
             }
 
-            dynamic ReturnStatus(string name, string startDate, string endDate, int first, int offset)
+            dynamic ReturnStatus(string name, ResolveFieldContext ctx)
             {
+                string startDate = "";
+                string endDate = "";
+                int first = 0;
+                int offset = 0;
+
+                if (ctx.HasArgument("startdate") && ctx.HasArgument("enddate"))
+                {
+                    startDate = ctx.GetArgument<string>("startdate");
+                    endDate = ctx.GetArgument<string>("enddate");
+                }
+
+                if (ctx.HasArgument("first"))
+                {
+                    first = ctx.GetArgument<int>("first");
+                }
+
+                if (ctx.HasArgument("offset"))
+                {
+                    offset = ctx.GetArgument<int>("offset");
+                }
+
                 dynamic response = new SimpleJson.JsonObject();
 
-                dynamic staticData = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
+                dynamic staticData = data.GetItemsFromStaticList(name, ctx);
 
                 response.items = staticData.items;
                 response.value = staticData.value;
                 response.title = name;
                 response.link = "google.com";
                 response.linkLabel = "all " + name;
-                response.actionable = staticData.Count > 1 ? true : false;
+                response.actionable = staticData.value > 0 ? true : false;
                 response.color = "blue";
                 response.date = new DateTime().ToJsonString();
                 response.description = "description of the " + name;
 
                 return response;
             }
-            List<dynamic> ReturnItems(string name, string startDate, string endDate, int first, int offset)
+            List<dynamic> ReturnItems(string name, ResolveFieldContext ctx)
             {
-                dynamic staticData = data.GetItemsFromStaticList(name, startDate, endDate, first, offset);
+                dynamic staticData = data.GetItemsFromStaticList(name, ctx);
 
                 return staticData.items;
             }
+
+            void AddStandardItemProperties(ObjectGraphType typeToEdit)
+            {
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
+                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
+            }
+
             void AddStatus(ObjectGraphType typeToEdit)
             {
-                // title already exists in Issue we should probably check for each field if it exists in type
-                //typeToEdit.Field(new StringGraphType().GetType(), "title");
+                typeToEdit.Field(new StringGraphType().GetType(), "title");
                 typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
                 typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
                 typeToEdit.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
@@ -208,6 +196,18 @@ namespace Assistant
                 itemsField.Name = "items";
                 itemsField.ResolvedType = new ListGraphType(typeOfItems);
                 typeToEdit.AddField(itemsField);
+            }
+
+            void AddDateRange(FieldType query)
+            {
+                query.Arguments.Add(new QueryArgument<StringGraphType> { Name = "startdate", Description = "Start date to filter by" });
+                query.Arguments.Add(new QueryArgument<StringGraphType> { Name = "enddate", Description = "End date to filter by" });
+            }
+
+            void AddPagination(FieldType query)
+            {
+                query.Arguments.Add(new QueryArgument<IntGraphType> { Name = "first", Description = "Number of items to select." });
+                query.Arguments.Add(new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." });
             }
         }
     }
