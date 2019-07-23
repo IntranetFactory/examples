@@ -53,40 +53,6 @@ namespace Assistant
 
             schema.Query = root;
 
-            // loop through all types in schema to filter out custo types define by user
-            var allTypes = schema.AllTypes.ToList();
-            for (int i = 0; i < allTypes.Count; i++)
-            {
-                Type t = allTypes[i].GetType();
-
-                // types defined by user are ObjectGraphType and we ignore query as we process it later and differently
-                if (t == typeof(ObjectGraphType) && allTypes[i].Name != "Query")
-                {
-                    var myType = schema.FindType(allTypes[i].Name) as ObjectGraphType;
-
-                    // register fields for Task
-                    foreach (FieldType f in myType.Fields)
-                    {
-                        f.Resolver = new FuncFieldResolver<object>(ctx =>
-                        {
-                            var o = ctx.Source as IDictionary<string, object>;
-                            if (o == null)
-                            {
-                                return null;
-                            }
-
-                            if (!o.ContainsKey(ctx.FieldName))
-                            {
-                                return null;
-                            }
-
-                            return o[ctx.FieldName];
-
-                        });
-                    }
-                }
-            }
-
             if (schema.Query != null)
             {
                 // register queries and parameters
@@ -163,6 +129,7 @@ namespace Assistant
 
                 return response;
             }
+
             List<dynamic> ReturnItems(string name, ResolveFieldContext ctx)
             {
                 dynamic staticData = data.GetItemsFromStaticList(name, ctx);
@@ -170,32 +137,52 @@ namespace Assistant
                 return staticData.items;
             }
 
+            void AddTypeField(ObjectGraphType ot, IGraphType t, string name){
+                FieldType f = new FieldType { ResolvedType = t, Name = name };
+                
+                f.Resolver = new FuncFieldResolver<object>(ctx =>
+                {
+                    var o = ctx.Source as IDictionary<string, object>;
+                    if (o == null)
+                    {
+                        return null;
+                    }
+
+                    if (!o.ContainsKey(ctx.FieldName))
+                    {
+                        return null;
+                    }
+
+                    return o[ctx.FieldName];
+
+                });
+                
+                ot.AddField(f);
+            }
+
             void AddStandardItemProperties(ObjectGraphType typeToEdit)
             {
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "id" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "title" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
+                AddTypeField(typeToEdit, new StringGraphType(), "id");
+                AddTypeField(typeToEdit, new StringGraphType(), "title");
+                AddTypeField(typeToEdit, new StringGraphType(), "description");
+                AddTypeField(typeToEdit, new StringGraphType(), "date");
             }
 
             void AddStatus(ObjectGraphType typeToEdit)
             {
-                typeToEdit.Field(new StringGraphType().GetType(), "title");
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "link" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "linkLabel" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new BooleanGraphType(), Name = "actionable" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new IntGraphType(), Name = "value" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "color" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "date" });
-                typeToEdit.AddField(new FieldType { ResolvedType = new StringGraphType(), Name = "description" });
+                AddTypeField(typeToEdit, new StringGraphType(), "title");
+                AddTypeField(typeToEdit, new StringGraphType(), "link");
+                AddTypeField(typeToEdit, new StringGraphType(), "linkLabel");
+                AddTypeField(typeToEdit, new BooleanGraphType(), "actionable");
+                AddTypeField(typeToEdit, new IntGraphType(), "value");
+                AddTypeField(typeToEdit, new StringGraphType(), "color");
+                AddTypeField(typeToEdit, new StringGraphType(), "date");
+                AddTypeField(typeToEdit, new StringGraphType(), "description");
             }
 
             void AddItems(ObjectGraphType typeToEdit, IGraphType typeOfItems)
             {
-                FieldType itemsField = new FieldType();
-                itemsField.Name = "items";
-                itemsField.ResolvedType = new ListGraphType(typeOfItems);
-                typeToEdit.AddField(itemsField);
+                AddTypeField(typeToEdit, new ListGraphType(typeOfItems), "items");
             }
 
             void AddDateRange(FieldType query)
