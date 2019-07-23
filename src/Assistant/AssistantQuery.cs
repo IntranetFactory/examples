@@ -1,7 +1,6 @@
 using System;
 using GraphQL.Types;
 using GraphQL.Resolvers;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace Assistant
@@ -10,25 +9,24 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
-            var schema = new Schema();
 
             var issue = new ObjectGraphType { Name = "Issue" };
             AddStandardItemProperties(issue);
-            schema.RegisterTypes(issue);
+            data.schema.RegisterTypes(issue);
 
             var issueStatus = new ObjectGraphType { Name = "IssueStatus" };
             AddStatus(issueStatus);
             AddItems(issueStatus, issue);
-            schema.RegisterTypes(issueStatus);
+            data.schema.RegisterTypes(issueStatus);
 
             var task = new ObjectGraphType { Name = "Task" };
             AddStandardItemProperties(task);
-            schema.RegisterTypes(task);
+            data.schema.RegisterTypes(task);
 
             var taskStatus = new ObjectGraphType { Name = "TaskStatus" };
             AddStatus(taskStatus);
             AddItems(taskStatus, task);
-            schema.RegisterTypes(taskStatus);
+            data.schema.RegisterTypes(taskStatus);
 
             // add 'taskState' query to the schema
             var root = new ObjectGraphType();
@@ -51,12 +49,12 @@ namespace Assistant
             AddPagination(issueState);
             root.AddField(issueState);
 
-            schema.Query = root;
+            data.schema.Query = root;
 
-            if (schema.Query != null)
+            if (data.schema.Query != null)
             {
                 // register queries and parameters
-                foreach (FieldType f in schema.Query.Fields)
+                foreach (FieldType f in data.schema.Query.Fields)
                 {
                     AddField(GetFieldType(f));
                 }
@@ -75,6 +73,16 @@ namespace Assistant
                     field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
                         return ReturnStatus(f.Name, ctx);
+                    });
+
+                    return field;
+                }
+                else if (f.Name.Contains("createTask"))
+                {
+                    field.Resolver = new FuncFieldResolver<List<dynamic>>(context =>
+                    {
+                        //var issue = context.GetArgument(schema.FindType("Task"), "task");
+                        return data.AddTask(context);
                     });
 
                     return field;
@@ -137,9 +145,10 @@ namespace Assistant
                 return staticData.items;
             }
 
-            void AddTypeField(ObjectGraphType ot, IGraphType t, string name){
+            void AddTypeField(ObjectGraphType ot, IGraphType t, string name)
+            {
                 FieldType f = new FieldType { ResolvedType = t, Name = name };
-                
+
                 f.Resolver = new FuncFieldResolver<object>(ctx =>
                 {
                     var o = ctx.Source as IDictionary<string, object>;
@@ -156,7 +165,7 @@ namespace Assistant
                     return o[ctx.FieldName];
 
                 });
-                
+
                 ot.AddField(f);
             }
 

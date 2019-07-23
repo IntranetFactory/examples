@@ -1,35 +1,40 @@
+using GraphQL.Resolvers;
 using GraphQL.Types;
 
 namespace Assistant
 {
     /// <example>
-    /// This is an example JSON request for a mutation
-    /// {
-    ///   "query": "mutation ($human:HumanInput!){ createHuman(human: $human) { id name } }",
-    ///   "variables": {
-    ///     "human": {
-    ///       "name": "Boba Fett"
-    ///     }
-    ///   }
-    /// }
+    /*
+mutation{
+  createTask(description:"desc",title:"title"){
+    id,
+    title,
+    description
+  }
+}
+    */
     /// </example>
     public class AssistantMutation : ObjectGraphType
     {
         public AssistantMutation(AssistantData data)
         {
+
             Name = "Mutation";
-            /*
-            Field<IssueType>(
-                "createHuman",
-                arguments: new QueryArguments(
-                    new QueryArgument<NonNullGraphType<IssueInputType>> {Name = "human"}
-                ),
-                resolve: context =>
-                {
-                    var human = context.GetArgument<issue>("human");
-                    return data.AddIssue(human);
-                });
-                */
+
+            FieldType createTask = new FieldType();
+            createTask.Name = "createTask";
+            createTask.ResolvedType = data.schema.FindType("Task");
+            createTask.Arguments = new QueryArguments();
+            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "title", Description = "its title" });
+            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "description", Description = "its description" });
+            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "date", Description = "its date" });
+
+            createTask.Resolver = new FuncFieldResolver<dynamic>(context =>
+            {
+                return data.AddTask(context);
+            });
+
+            AddField(createTask);
         }
     }
 }

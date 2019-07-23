@@ -14,9 +14,12 @@ namespace Assistant
     {
         public List<dynamic> issueTestList = new List<dynamic>();
         public List<dynamic> taskTestList = new List<dynamic>();
+        public Schema schema;
 
         public AssistantData()
         {
+            schema = new Schema();
+
             dynamic issue1 = new SimpleJson.JsonObject();
             issue1.Id = "1";
             issue1.Title = "Issue1";
@@ -340,11 +343,34 @@ namespace Assistant
             return response;
         }
 
-        public dynamic AddIssue(dynamic _issue)
+        public dynamic AddTask(ResolveFieldContext ctx)
         {
-            _issue.Id = Guid.NewGuid().ToString();
-            issueTestList.Add(_issue);
-            return _issue;
+            string title = "";
+            string description = "";
+            string date = "";
+
+            if (ctx.HasArgument("title"))
+            {
+                title = ctx.GetArgument<string>("title");
+            }
+
+            if (ctx.HasArgument("description"))
+            {
+                description = ctx.GetArgument<string>("description");
+            }
+
+            if (ctx.HasArgument("date"))
+            {
+                date = ctx.GetArgument<string>("date");
+            }
+
+            dynamic task = new SimpleJson.JsonObject();
+            task.id = Guid.NewGuid().ToString();
+            task.title = title;
+            task.description = description;
+            task.date = date;
+
+            return task;
         }
     }
 }
