@@ -12,6 +12,8 @@ namespace Assistant
 
     public class AssistantData
     {
+        public List<dynamic> userTestList = new List<dynamic>();
+
         public List<dynamic> issueTestList = new List<dynamic>();
         public List<dynamic> taskTestList = new List<dynamic>();
         public Schema schema;
@@ -19,6 +21,32 @@ namespace Assistant
         public AssistantData()
         {
             schema = new Schema();
+
+            dynamic user1 = new SimpleJson.JsonObject();
+            user1.id = "u1";
+            user1.title = "User1";
+
+            dynamic user2 = new SimpleJson.JsonObject();
+            user2.id = "u2";
+            user2.title = "User2";
+
+            dynamic user3 = new SimpleJson.JsonObject();
+            user3.id = "u3";
+            user3.title = "User3";
+
+            dynamic user4 = new SimpleJson.JsonObject();
+            user4.id = "u4";
+            user4.title = "User4";
+
+            dynamic user5 = new SimpleJson.JsonObject();
+            user5.id = "u5";
+            user5.title = "User5";
+
+            userTestList.Add(user1);
+            userTestList.Add(user2);
+            userTestList.Add(user3);
+            userTestList.Add(user4);
+            userTestList.Add(user5);
 
             dynamic issue1 = new SimpleJson.JsonObject();
             issue1.Id = "1";
@@ -67,6 +95,8 @@ namespace Assistant
             task1.Description = "desc1";
             task1.Date = DateTime.Now.ToJsonString();
             task1.Link = "link1";
+            task1.createdBy = GetCreatedBy();
+            task1.assignedTo = GetAssignedTo();
 
             dynamic task2 = new SimpleJson.JsonObject();
             task2.Id = "2";
@@ -74,6 +104,8 @@ namespace Assistant
             task2.Description = "desc2";
             task2.Date = DateTime.Now.ToJsonString();
             task2.Link = "link2";
+            task2.createdBy = GetCreatedBy();
+            task2.assignedTo = GetAssignedTo();
 
             dynamic task3 = new SimpleJson.JsonObject();
             task3.Id = "3";
@@ -81,6 +113,8 @@ namespace Assistant
             task3.Description = "desc3";
             task3.Date = DateTime.Now.ToJsonString();
             task3.Link = "link3";
+            task3.createdBy = GetCreatedBy();
+            task3.assignedTo = GetAssignedTo();
 
             dynamic task4 = new SimpleJson.JsonObject();
             task4.Id = "4";
@@ -88,6 +122,8 @@ namespace Assistant
             task4.Description = "desc4";
             task4.Date = DateTime.Now.ToJsonString();
             task4.Link = "link4";
+            task4.createdBy = GetCreatedBy();
+            task4.assignedTo = GetAssignedTo();
 
             dynamic task5 = new SimpleJson.JsonObject();
             task5.Id = "5";
@@ -95,12 +131,34 @@ namespace Assistant
             task5.Description = "desc5";
             task5.Date = DateTime.Now.ToJsonString();
             task5.Link = "link5";
+            task5.createdBy = GetCreatedBy();
+            task5.assignedTo = GetAssignedTo();
 
             taskTestList.Add(task1);
             taskTestList.Add(task2);
             taskTestList.Add(task3);
             taskTestList.Add(task4);
             taskTestList.Add(task5);
+        }
+
+        dynamic GetCreatedBy()
+        {
+            return userTestList[new Random().Next(0, userTestList.Count)];
+        }
+
+        List<dynamic> GetAssignedTo()
+        {
+            List<dynamic> assignees = new List<dynamic>();
+            int noOfAssignees = new Random().Next(0, 3);
+            for (int i = 0; i < noOfAssignees; i++)
+            {
+                int index = new Random().Next(0, userTestList.Count);
+                if (!assignees.Contains(userTestList[index])){
+                    assignees.Add(userTestList[index]);
+                }
+            }
+
+            return assignees;
         }
 
         public Task<dynamic> GetIssueByIdAsync(string id)
@@ -336,6 +394,9 @@ namespace Assistant
                 jo.title = item.Title;
                 jo.description = item.Description;
                 jo.date = item.Date;
+
+                jo.createdBy = item.createdBy;
+                jo.assignedTo = item.assignedTo;
                 items.Add(jo);
             }
             response.items = items;

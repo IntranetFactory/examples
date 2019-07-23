@@ -9,6 +9,9 @@ namespace Assistant
     {
         public AssistantQuery(AssistantData data)
         {
+            var user = new ObjectGraphType { Name = "User" };
+            AddUserProperties(user);
+            data.schema.RegisterTypes(user);
 
             var issue = new ObjectGraphType { Name = "Issue" };
             AddStandardItemProperties(issue);
@@ -21,6 +24,8 @@ namespace Assistant
 
             var task = new ObjectGraphType { Name = "Task" };
             AddStandardItemProperties(task);
+            AddCreatedBy(task, user);
+            AddAssignedTo(task, user);
             data.schema.RegisterTypes(task);
 
             var taskStatus = new ObjectGraphType { Name = "TaskStatus" };
@@ -28,9 +33,7 @@ namespace Assistant
             AddItems(taskStatus, task);
             data.schema.RegisterTypes(taskStatus);
 
-            // add 'taskState' query to the schema
             var root = new ObjectGraphType();
-
             root.Name = "Root";
 
             FieldType taskState = new FieldType();
@@ -169,6 +172,12 @@ namespace Assistant
                 ot.AddField(f);
             }
 
+            void AddUserProperties(ObjectGraphType typeToEdit)
+            {
+                AddTypeField(typeToEdit, new StringGraphType(), "id");
+                AddTypeField(typeToEdit, new StringGraphType(), "title");
+            }
+
             void AddStandardItemProperties(ObjectGraphType typeToEdit)
             {
                 AddTypeField(typeToEdit, new StringGraphType(), "id");
@@ -192,6 +201,16 @@ namespace Assistant
             void AddItems(ObjectGraphType typeToEdit, IGraphType typeOfItems)
             {
                 AddTypeField(typeToEdit, new ListGraphType(typeOfItems), "items");
+            }
+
+            void AddCreatedBy(ObjectGraphType typeToEdit, IGraphType userType)
+            {
+                AddTypeField(typeToEdit, userType, "createdBy");
+            }
+
+            void AddAssignedTo(ObjectGraphType typeToEdit, IGraphType typeOfItems)
+            {
+                AddTypeField(typeToEdit, new ListGraphType(typeOfItems), "assignedTo");
             }
 
             void AddDateRange(FieldType query)
