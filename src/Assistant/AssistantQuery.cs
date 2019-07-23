@@ -126,7 +126,7 @@ namespace Assistant
 
                 dynamic response = new SimpleJson.JsonObject();
 
-                dynamic staticData = data.GetItemsFromStaticList(name, ctx);
+                dynamic staticData = data.GetItems(name, ctx);
 
                 response.items = staticData.items;
                 response.value = staticData.value;
@@ -143,7 +143,7 @@ namespace Assistant
 
             List<dynamic> ReturnItems(string name, ResolveFieldContext ctx)
             {
-                dynamic staticData = data.GetItemsFromStaticList(name, ctx);
+                dynamic staticData = data.GetItems(name, ctx);
 
                 return staticData.items;
             }

@@ -153,7 +153,8 @@ namespace Assistant
             for (int i = 0; i < noOfAssignees; i++)
             {
                 int index = new Random().Next(0, userTestList.Count);
-                if (!assignees.Contains(userTestList[index])){
+                if (!assignees.Contains(userTestList[index]))
+                {
                     assignees.Add(userTestList[index]);
                 }
             }
@@ -166,7 +167,7 @@ namespace Assistant
             return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
 
-        public Task<List<dynamic>> GetIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public List<dynamic> GetIssuesFromEndpoint(string startDate, string endDate, int first, int offset)
         {
             List<dynamic> issues = new List<dynamic>();
 
@@ -184,21 +185,26 @@ namespace Assistant
                 url += "endDate=" + endDate;
             }
 
-            if (page != 0)
+            int page = 0;
+            if (offset > 0)
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "page=" + page;
+                page = offset / first;
             }
 
-            if (pageSize != 0)
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "pageSize=" + pageSize;
-            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            //int waste = offset - first;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "page=" + page;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "pageSize=" + pageSize;
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
+            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
             webRequest.Headers.Add("X-UserName", "admin");
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
@@ -229,14 +235,14 @@ namespace Assistant
                 readStream.Close();
             }
 
-            return Task.FromResult(issues);
+            return issues;
         }
 
-        public Task<List<dynamic>> GetOpenIssuesFromEndpoint(string startDate, string endDate, int page, int pageSize)
+        public List<dynamic> GetTasksFromEndpoint(string startDate, string endDate, int first, int offset)
         {
-            List<dynamic> issues = new List<dynamic>();
+            List<dynamic> tasks = new List<dynamic>();
 
-            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues-open?";
+            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/tasks?";
 
             if (startDate != "")
             {
@@ -250,21 +256,26 @@ namespace Assistant
                 url += "endDate=" + endDate;
             }
 
-            if (page != 0)
+            int page = 0;
+            if (offset > 0)
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "page=" + page;
+                page = offset / first;
             }
 
-            if (pageSize != 0)
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "pageSize=" + pageSize;
-            }
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            //int waste = offset - first;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "page=" + page;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "pageSize=" + pageSize;
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
+            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
             webRequest.Headers.Add("X-UserName", "admin");
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
@@ -281,34 +292,36 @@ namespace Assistant
                 {
                     dynamic item = response.Data.items[i];
 
-                    dynamic issue = new SimpleJson.JsonObject();
-                    issue.Id = item.id;
-                    issue.Title = item.title;
-                    issue.Description = item.description;
-                    issue.Date = item.date;
-                    issue.Link = item.link;
+                    dynamic task = new SimpleJson.JsonObject();
+                    task.Id = item.id;
+                    task.Title = item.title;
+                    task.Description = item.description;
+                    task.Date = item.date;
+                    task.Link = item.link;
+                    task.createdBy = item.createdBy;
+                    task.assignedTo = item.assignedTo;
 
-                    issues.Add(issue);
+                    tasks.Add(task);
                 }
 
                 webResponse.Close();
                 readStream.Close();
             }
 
-            return Task.FromResult(issues);
+            return tasks;
         }
 
-        public dynamic GetItemsFromStaticList(string name, ResolveFieldContext ctx)
+        public dynamic GetItems(string name, ResolveFieldContext ctx)
         {
-            string _startDate = "";
-            string _endDate = "";
+            string startDate = "";
+            string endDate = "";
             int first = 0;
             int offset = 0;
 
             if (ctx.HasArgument("startdate") && ctx.HasArgument("enddate"))
             {
-                _startDate = ctx.GetArgument<string>("startdate");
-                _endDate = ctx.GetArgument<string>("enddate");
+                startDate = ctx.GetArgument<string>("startdate");
+                endDate = ctx.GetArgument<string>("enddate");
             }
 
             if (ctx.HasArgument("first"))
@@ -325,69 +338,18 @@ namespace Assistant
 
             if (name.Contains("issue"))
             {
-                listToReturn = issueTestList;
+                listToReturn = GetIssuesFromEndpoint(startDate, endDate, first, offset);
             }
             else if (name.Contains("task"))
             {
-                listToReturn = taskTestList;
-            }
-
-            // filter by daterange
-            List<dynamic> filteredByDateTime = null;
-            if (!string.IsNullOrEmpty(_startDate) && !string.IsNullOrEmpty(_endDate))
-            {
-                DateTime startDate = _startDate.ToDateTime();
-                DateTime endDate = _endDate.ToDateTime();
-
-                filteredByDateTime = new List<dynamic>();
-                for (int i = 0; i < listToReturn.Count; i++)
-                {
-                    string s = listToReturn[i].Date.ToString();
-                    DateTime d = s.ToDateTime();
-                    if (d > startDate && d < endDate)
-                    {
-                        filteredByDateTime.Add(listToReturn[i]);
-                    }
-                }
-            }
-
-            if (filteredByDateTime == null)
-            {
-                filteredByDateTime = listToReturn;
-            }
-
-            int page = 0;
-            if (offset > 0)
-            {
-                page = offset / first;
-            }
-            int pageSize = (offset + first) - (page * first);
-            int waste = pageSize - first;
-
-            List<dynamic> paginatedItems = null;
-            if (first > 0)
-            {
-                paginatedItems = new List<dynamic>();
-
-                for (int i = offset; i < offset + first; i++)
-                {
-                    if (i >= filteredByDateTime.Count)
-                    {
-                        break;
-                    }
-                    paginatedItems.Add(filteredByDateTime[i]);
-                }
+                listToReturn = GetTasksFromEndpoint(startDate, endDate, first, offset);
             }
             dynamic response = new SimpleJson.JsonObject();
-            response.value = filteredByDateTime.Count;
-
-            if (paginatedItems == null)
-            {
-                paginatedItems = filteredByDateTime;
-            }
+            response.items = listToReturn;
+            response.value = listToReturn.Count;
 
             List<dynamic> items = new List<dynamic>();
-            foreach (var item in paginatedItems)
+            foreach (var item in listToReturn)
             {
                 dynamic jo = new SimpleJson.JsonObject();
                 jo.id = item.Id;
