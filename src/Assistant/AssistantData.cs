@@ -1,6 +1,7 @@
 using GraphQL.Types;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -392,6 +393,57 @@ namespace Assistant
             task.title = title;
             task.description = description;
             task.date = date;
+
+            // send post request to gitlab connector to create Issue
+            try
+            {
+                string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/poc-connector/task-create";
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+                webRequest.Method = "POST";
+                webRequest.ContentType = "application/json";
+                webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
+                webRequest.Headers.Add("X-UserName", "admin");
+
+                string stringData = SimpleJson.SimpleJson.SerializeObject(task); //place body here
+                var data = Encoding.ASCII.GetBytes(stringData); // or UTF8
+                webRequest.ContentLength = data.Length;
+                var newStream = webRequest.GetRequestStream();
+                newStream.Write(data, 0, data.Length);
+                newStream.Close();
+
+                using (HttpWebResponse response = webRequest.GetResponse() as HttpWebResponse)
+                {
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        // Get the stream associated with the response.
+                        Stream receiveStream = response.GetResponseStream();
+                        StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+
+                        // convert stream to JsonObject
+                        dynamic res = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
+
+                        response.Close();
+                        readStream.Close();
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                using (var stream = ex.Response.GetResponseStream())
+                using (var reader = new StreamReader(stream))
+                {
+                    var z = reader.ReadToEnd();
+                    Console.WriteLine(z);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                // Something more serious happened
+                // like for example you don't have network access
+                // we cannot talk about a server exception here as
+                // the server probably was never reached
+            }
 
             return task;
         }
