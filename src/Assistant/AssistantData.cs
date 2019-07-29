@@ -168,11 +168,11 @@ namespace Assistant
             return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
 
-        public List<dynamic> GetIssuesFromEndpoint(string startDate, string endDate, int first, int offset)
+        public List<dynamic> GetIssuesFromEndpoint(string startDate, string endDate, int first, int offset, ResolveFieldContext ctx)
         {
             List<dynamic> issues = new List<dynamic>();
 
-            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
+            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issuesaa?";
 
             if (startDate != "")
             {
@@ -205,7 +205,7 @@ namespace Assistant
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
+            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
             webRequest.Headers.Add("X-UserName", "admin");
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
@@ -217,6 +217,16 @@ namespace Assistant
                 dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
 
 
+                //test code
+                if (response.ErrorCode != 0)
+                {
+                    ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + response.ErrorCode + ". ErrorText: " + response.Data.ErrorText));
+                }
+
+                if (response.Data.items == null)
+                {
+                    response.Data.items = new List<SimpleJson.JsonObject>();
+                }
                 // read items from response and convert them to Issues
                 for (int i = 0; i < response.Data.items.Count; i++)
                 {
@@ -276,7 +286,7 @@ namespace Assistant
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
             webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "utt0iaiyhraisdzma80i2uanrr8tyki4");
+            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
             webRequest.Headers.Add("X-UserName", "admin");
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
@@ -287,7 +297,10 @@ namespace Assistant
                 // convert stream to JsonObject
                 dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
 
-
+                if (response.Data.items == null)
+                {
+                    response.Data.items = new List<SimpleJson.JsonObject>();
+                }
                 // read items from response and convert them to Issues
                 for (int i = 0; i < response.Data.items.Count; i++)
                 {
@@ -312,7 +325,7 @@ namespace Assistant
             return tasks;
         }
 
-        public dynamic GetItems(string name, ResolveFieldContext ctx)
+        public Task<dynamic> GetItems(string name, ResolveFieldContext ctx)
         {
             string startDate = "";
             string endDate = "";
@@ -339,7 +352,7 @@ namespace Assistant
 
             if (name.Contains("issue"))
             {
-                listToReturn = GetIssuesFromEndpoint(startDate, endDate, first, offset);
+                listToReturn = GetIssuesFromEndpoint(startDate, endDate, first, offset, ctx);
             }
             else if (name.Contains("task"))
             {
@@ -364,10 +377,10 @@ namespace Assistant
             }
             response.items = items;
 
-            return response;
+            return Task.FromResult(response as object);
         }
 
-        public dynamic AddTask(ResolveFieldContext ctx)
+        public Task<dynamic> AddTask(ResolveFieldContext ctx)
         {
             string title = "";
             string description = "";
@@ -445,7 +458,7 @@ namespace Assistant
                 // the server probably was never reached
             }
 
-            return task;
+            return Task.FromResult(task as object);
         }
     }
 }

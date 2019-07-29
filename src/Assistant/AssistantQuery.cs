@@ -2,6 +2,7 @@ using System;
 using GraphQL.Types;
 using GraphQL.Resolvers;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Assistant
 {
@@ -75,6 +76,7 @@ namespace Assistant
                 {
                     field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
+                        ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: LLELELELLELELEL "));
                         return ReturnStatus(f.Name, ctx);
                     });
 
@@ -82,7 +84,7 @@ namespace Assistant
                 }
                 else if (f.Name.Contains("createTask"))
                 {
-                    field.Resolver = new FuncFieldResolver<List<dynamic>>(context =>
+                    field.Resolver = new FuncFieldResolver<dynamic>(context =>
                     {
                         //var issue = context.GetArgument(schema.FindType("Task"), "task");
                         return data.AddTask(context);
@@ -101,7 +103,7 @@ namespace Assistant
                 }
             }
 
-            dynamic ReturnStatus(string name, ResolveFieldContext ctx)
+            Task<dynamic> ReturnStatus(string name, ResolveFieldContext ctx)
             {
                 string startDate = "";
                 string endDate = "";
@@ -126,19 +128,19 @@ namespace Assistant
 
                 dynamic response = new SimpleJson.JsonObject();
 
-                dynamic staticData = data.GetItems(name, ctx);
+                Task<dynamic> staticData = data.GetItems(name, ctx);
 
-                response.items = staticData.items;
-                response.value = staticData.value;
+                response.items = staticData.Result.items;
+                response.value = staticData.Result.value;
                 response.title = name;
                 response.link = "google.com";
                 response.linkLabel = "all " + name;
-                response.actionable = staticData.value > 0 ? true : false;
+                response.actionable = staticData.Result.value > 0 ? true : false;
                 response.color = "blue";
                 response.date = new DateTime().ToJsonString();
                 response.description = "description of the " + name;
 
-                return response;
+                return Task.FromResult(response as object);
             }
 
             List<dynamic> ReturnItems(string name, ResolveFieldContext ctx)
@@ -225,5 +227,7 @@ namespace Assistant
                 query.Arguments.Add(new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." });
             }
         }
+
+        public object Executer { get; }
     }
 }
