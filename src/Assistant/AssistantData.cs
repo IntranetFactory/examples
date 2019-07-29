@@ -167,166 +167,87 @@ namespace Assistant
         {
             return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
-
-        public List<dynamic> GetIssuesFromEndpoint(string startDate, string endDate, int first, int offset, ResolveFieldContext ctx)
+        public Task<dynamic> ExecuteRequest(string name, ResolveFieldContext ctx)
         {
-            List<dynamic> issues = new List<dynamic>();
-
-            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issuesaa?";
-
-            if (startDate != "")
+            dynamic returnObj = new SimpleJson.JsonObject();
+            string url = ResolveUrl(name, ctx);
+            try
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "startDate=" + startDate;
-            }
-
-            if (endDate != "")
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "endDate=" + endDate;
-            }
-
-            int page = 0;
-            if (offset > 0)
-            {
-                page = offset / first;
-            }
-
-            int pageSize = (offset + first) - (page * first);
-            int waste = pageSize - first;
-
-            //int waste = offset - first;
-
-            if (!url.EndsWith("?")) url += "&";
-            url += "page=" + page;
-
-            if (!url.EndsWith("?")) url += "&";
-            url += "pageSize=" + pageSize;
-
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
-            webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
-            webRequest.Headers.Add("X-UserName", "admin");
-            using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
-            {
-                // Get the stream associated with the response.
-                Stream receiveStream = webResponse.GetResponseStream();
-                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
-
-                // convert stream to JsonObject
-                dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
-
-
-                //test code
-                if (response.ErrorCode != 0)
+                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
+                webRequest.ContentType = "application/json";
+                webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
+                webRequest.Headers.Add("X-UserName", "admin");
+                using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
                 {
-                    ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + response.ErrorCode + ". ErrorText: " + response.Data.ErrorText));
+                    // Get the stream associated with the response.
+                    Stream receiveStream = webResponse.GetResponseStream();
+                    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
+
+                    // convert stream to JsonObject
+                    dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
+
+                    //test code
+                    if (response.ErrorCode != 0)
+                    {
+                        ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + response.ErrorCode + ". ErrorText: " + response.Data.ErrorText));
+                    }
+
+                    if (response.Data.items == null)
+                    {
+                        response.Data.items = new List<SimpleJson.JsonObject>();
+                    }
+
+                    List<dynamic> items = new List<dynamic>();
+
+                    foreach (var item in response.Data.items)
+                    {
+                        dynamic obj = new SimpleJson.JsonObject();
+
+                        // map each key / value pair to new object with lowercase keys
+                        foreach (var entry in item)
+                        {
+                            obj[entry.Key.ToLower()] = entry.Value;
+                        }
+
+                        items.Add(obj);
+                    }
+
+                    returnObj.items = items;
+                    returnObj.value = items.Count;
+
+                    webResponse.Close();
+                    readStream.Close();
                 }
-
-                if (response.Data.items == null)
-                {
-                    response.Data.items = new List<SimpleJson.JsonObject>();
-                }
-                // read items from response and convert them to Issues
-                for (int i = 0; i < response.Data.items.Count; i++)
-                {
-                    dynamic item = response.Data.items[i];
-
-                    dynamic issue = new SimpleJson.JsonObject();
-                    issue.Id = item.id;
-                    issue.Title = item.title;
-                    issue.Description = item.description;
-                    issue.Date = item.date;
-                    issue.Link = item.link;
-
-                    issues.Add(issue);
-                }
-
-                webResponse.Close();
-                readStream.Close();
+            }
+            catch (WebException ex)
+            {
+                ctx.Errors.Add(new GraphQL.ExecutionError(ex.Message.ToString()));
+            }
+            catch (Exception ex)
+            {
+                ctx.Errors.Add(new GraphQL.ExecutionError(ex.Message.ToString()));
             }
 
-            return issues;
+            return Task.FromResult(returnObj as object);
         }
 
-        public List<dynamic> GetTasksFromEndpoint(string startDate, string endDate, int first, int offset)
+        // constructs url with parameters if provided
+        string ResolveUrl(string name, ResolveFieldContext ctx)
         {
-            List<dynamic> tasks = new List<dynamic>();
+            string url = "";
 
-            string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/tasks?";
-
-            if (startDate != "")
+            switch (name)
             {
-                if (!url.EndsWith("?")) url += "&";
-                url += "startDate=" + startDate;
+                case "issueState":
+                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/gitlab-connector/myissues?";
+                    break;
+                case "taskState":
+                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/tasks?";
+                    break;
+                default:
+                    break;
             }
 
-            if (endDate != "")
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "endDate=" + endDate;
-            }
-
-            int page = 0;
-            if (offset > 0)
-            {
-                page = offset / first;
-            }
-
-            int pageSize = (offset + first) - (page * first);
-            int waste = pageSize - first;
-
-            //int waste = offset - first;
-
-            if (!url.EndsWith("?")) url += "&";
-            url += "page=" + page;
-
-            if (!url.EndsWith("?")) url += "&";
-            url += "pageSize=" + pageSize;
-
-            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
-            webRequest.ContentType = "application/json";
-            webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
-            webRequest.Headers.Add("X-UserName", "admin");
-            using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
-            {
-                // Get the stream associated with the response.
-                Stream receiveStream = webResponse.GetResponseStream();
-                StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
-
-                // convert stream to JsonObject
-                dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
-
-                if (response.Data.items == null)
-                {
-                    response.Data.items = new List<SimpleJson.JsonObject>();
-                }
-                // read items from response and convert them to Issues
-                for (int i = 0; i < response.Data.items.Count; i++)
-                {
-                    dynamic item = response.Data.items[i];
-
-                    dynamic task = new SimpleJson.JsonObject();
-                    task.Id = item.id;
-                    task.Title = item.title;
-                    task.Description = item.description;
-                    task.Date = item.date;
-                    task.Link = item.link;
-                    task.createdBy = item.createdBy;
-                    task.assignedTo = item.assignedTo;
-
-                    tasks.Add(task);
-                }
-
-                webResponse.Close();
-                readStream.Close();
-            }
-
-            return tasks;
-        }
-
-        public Task<dynamic> GetItems(string name, ResolveFieldContext ctx)
-        {
             string startDate = "";
             string endDate = "";
             int first = 0;
@@ -348,36 +269,34 @@ namespace Assistant
                 offset = ctx.GetArgument<int>("offset");
             }
 
-            List<dynamic> listToReturn = null;
-
-            if (name.Contains("issue"))
+            if (startDate != "")
             {
-                listToReturn = GetIssuesFromEndpoint(startDate, endDate, first, offset, ctx);
+                if (!url.EndsWith("?")) url += "&";
+                url += "startDate=" + startDate;
             }
-            else if (name.Contains("task"))
+
+            if (endDate != "")
             {
-                listToReturn = GetTasksFromEndpoint(startDate, endDate, first, offset);
+                if (!url.EndsWith("?")) url += "&";
+                url += "endDate=" + endDate;
             }
-            dynamic response = new SimpleJson.JsonObject();
-            response.items = listToReturn;
-            response.value = listToReturn.Count;
 
-            List<dynamic> items = new List<dynamic>();
-            foreach (var item in listToReturn)
+            int page = 0;
+            if (offset > 0)
             {
-                dynamic jo = new SimpleJson.JsonObject();
-                jo.id = item.Id;
-                jo.title = item.Title;
-                jo.description = item.Description;
-                jo.date = item.Date;
-
-                jo.createdBy = item.createdBy;
-                jo.assignedTo = item.assignedTo;
-                items.Add(jo);
+                page = offset / first;
             }
-            response.items = items;
 
-            return Task.FromResult(response as object);
+            int pageSize = (offset + first) - (page * first);
+            int waste = pageSize - first;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "page=" + page;
+
+            if (!url.EndsWith("?")) url += "&";
+            url += "pageSize=" + pageSize;
+
+            return url;
         }
 
         public Task<dynamic> AddTask(ResolveFieldContext ctx)

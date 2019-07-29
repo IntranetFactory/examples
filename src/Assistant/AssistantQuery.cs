@@ -76,7 +76,6 @@ namespace Assistant
                 {
                     field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                     {
-                        ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: LLELELELLELELEL "));
                         return ReturnStatus(f.Name, ctx);
                     });
 
@@ -86,7 +85,6 @@ namespace Assistant
                 {
                     field.Resolver = new FuncFieldResolver<dynamic>(context =>
                     {
-                        //var issue = context.GetArgument(schema.FindType("Task"), "task");
                         return data.AddTask(context);
                     });
 
@@ -94,7 +92,7 @@ namespace Assistant
                 }
                 else
                 {
-                    field.Resolver = new FuncFieldResolver<List<dynamic>>(ctx =>
+                    field.Resolver = new FuncFieldResolver<Task<List<dynamic>>>(ctx =>
                     {
                         return ReturnItems(f.Name, ctx);
                     });
@@ -105,37 +103,16 @@ namespace Assistant
 
             Task<dynamic> ReturnStatus(string name, ResolveFieldContext ctx)
             {
-                string startDate = "";
-                string endDate = "";
-                int first = 0;
-                int offset = 0;
-
-                if (ctx.HasArgument("startdate") && ctx.HasArgument("enddate"))
-                {
-                    startDate = ctx.GetArgument<string>("startdate");
-                    endDate = ctx.GetArgument<string>("enddate");
-                }
-
-                if (ctx.HasArgument("first"))
-                {
-                    first = ctx.GetArgument<int>("first");
-                }
-
-                if (ctx.HasArgument("offset"))
-                {
-                    offset = ctx.GetArgument<int>("offset");
-                }
-
                 dynamic response = new SimpleJson.JsonObject();
 
-                Task<dynamic> staticData = data.GetItems(name, ctx);
+                Task<dynamic> serverResponse = data.ExecuteRequest(name, ctx);
 
-                response.items = staticData.Result.items;
-                response.value = staticData.Result.value;
+                response.items = serverResponse.Result.items;
+                response.value = serverResponse.Result.value;
                 response.title = name;
                 response.link = "google.com";
                 response.linkLabel = "all " + name;
-                response.actionable = staticData.Result.value > 0 ? true : false;
+                response.actionable = serverResponse.Result.value > 0 ? true : false;
                 response.color = "blue";
                 response.date = new DateTime().ToJsonString();
                 response.description = "description of the " + name;
@@ -143,11 +120,11 @@ namespace Assistant
                 return Task.FromResult(response as object);
             }
 
-            List<dynamic> ReturnItems(string name, ResolveFieldContext ctx)
+            Task<List<dynamic>> ReturnItems(string name, ResolveFieldContext ctx)
             {
-                dynamic staticData = data.GetItems(name, ctx);
+                dynamic staticData = data.ExecuteRequest(name, ctx);
 
-                return staticData.items;
+                return Task.FromResult(staticData.items);
             }
 
             void AddTypeField(ObjectGraphType ot, IGraphType t, string name)
