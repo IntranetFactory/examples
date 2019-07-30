@@ -3,6 +3,7 @@ using GraphQL.Types;
 using GraphQL.Resolvers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GraphQL.Conversion;
 
 namespace Assistant
 {
@@ -53,6 +54,20 @@ namespace Assistant
             AddPagination(issueState);
             root.AddField(issueState);
 
+
+            data.schema.FieldNameConverter = new DefaultFieldNameConverter();
+
+            var person = new ObjectGraphType { Name = "Person" };
+            AddTypeField(person, new StringGraphType(), "Name");
+            data.schema.RegisterTypes(person);
+
+            FieldType tmpQuery = new FieldType();
+            tmpQuery.Name = "PeRsoN";
+            tmpQuery.ResolvedType = person;
+            tmpQuery.Arguments = new QueryArguments();
+
+            root.AddField(tmpQuery);
+
             data.schema.Query = root;
 
             if (data.schema.Query != null)
@@ -72,11 +87,23 @@ namespace Assistant
                 field.ResolvedType = new NonNullGraphType(f.ResolvedType);
                 field.Arguments = new QueryArguments(f.Arguments);
 
-                field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
+                if (f.Name != "PeRsoN")
                 {
-                    return data.ExecuteRequestGET(f.Name, ctx);
-                });
+                    field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
+                    {
+                        return data.ExecuteRequestGET(f.Name, ctx);
+                    });
+                }
+                else
+                {
+                    field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
+                    {
+                        dynamic Person = new SimpleJson.JsonObject();
+                        Person.Name = "Quinn";
 
+                        return Person;
+                    });
+                }
                 return field;
             }
 
