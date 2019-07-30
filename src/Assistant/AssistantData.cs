@@ -191,23 +191,7 @@ namespace Assistant
 
                     if (response.Data.items == null) response.Data.items = new List<SimpleJson.JsonObject>();
 
-                    List<dynamic> items = new List<dynamic>();
-
-                    foreach (var item in response.Data.items)
-                    {
-                        dynamic obj = new SimpleJson.JsonObject();
-
-                        // map each key / value pair to new object with lowercase keys
-                        foreach (var entry in item)
-                        {
-                            obj[entry.Key.ToLower()] = entry.Value;
-                        }
-
-                        items.Add(obj);
-                    }
-
-                    returnObj.items = items;
-                    returnObj.value = items.Count;
+                    returnObj = response.Data;
 
                     webResponse.Close();
                     readStream.Close();
@@ -306,7 +290,6 @@ namespace Assistant
             item.description = description;
             item.date = date;
 
-            // send post request to gitlab connector to create Issue
             try
             {
                 string url = ResolveUrl(name, ctx);
@@ -316,8 +299,8 @@ namespace Assistant
                 webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
                 webRequest.Headers.Add("X-UserName", "admin");
 
-                string stringData = SimpleJson.SimpleJson.SerializeObject(item); //place body here
-                var data = Encoding.ASCII.GetBytes(stringData); // or UTF8
+                string stringData = SimpleJson.SimpleJson.SerializeObject(item);
+                var data = Encoding.ASCII.GetBytes(stringData);
                 webRequest.ContentLength = data.Length;
                 var newStream = webRequest.GetRequestStream();
                 newStream.Write(data, 0, data.Length);
@@ -325,12 +308,9 @@ namespace Assistant
 
                 using (HttpWebResponse response = await webRequest.GetResponseAsync() as HttpWebResponse)
                 {
-
-                    // Get the stream associated with the response.
                     Stream receiveStream = response.GetResponseStream();
                     StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
 
-                    // convert stream to JsonObject
                     dynamic res = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
 
                     if (res.ErrorCode != 0) ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + res.ErrorCode + ". ErrorText: " + res.Data.ErrorText));

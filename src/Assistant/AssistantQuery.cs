@@ -72,50 +72,12 @@ namespace Assistant
                 field.ResolvedType = new NonNullGraphType(f.ResolvedType);
                 field.Arguments = new QueryArguments(f.Arguments);
 
-                if (f.Name.Contains("State"))
+                field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
                 {
-                    field.Resolver = new FuncFieldResolver<dynamic>(ctx =>
-                    {
-                        return ReturnStatus(f.Name, ctx);
-                    });
+                    return data.ExecuteRequestGET(f.Name, ctx);
+                });
 
-                    return field;
-                }
-                else
-                {
-                    field.Resolver = new FuncFieldResolver<Task<List<dynamic>>>(ctx =>
-                    {
-                        return ReturnItems(f.Name, ctx);
-                    });
-
-                    return field;
-                }
-            }
-
-            Task<dynamic> ReturnStatus(string name, ResolveFieldContext ctx)
-            {
-                dynamic response = new SimpleJson.JsonObject();
-
-                Task<dynamic> serverResponse = data.ExecuteRequestGET(name, ctx);
-
-                response.items = serverResponse.Result.items;
-                response.value = serverResponse.Result.value;
-                response.title = name;
-                response.link = "google.com";
-                response.linkLabel = "all " + name;
-                response.actionable = serverResponse.Result.value > 0 ? true : false;
-                response.color = "blue";
-                response.date = new DateTime().ToJsonString();
-                response.description = "description of the " + name;
-
-                return Task.FromResult(response as object);
-            }
-
-            Task<List<dynamic>> ReturnItems(string name, ResolveFieldContext ctx)
-            {
-                dynamic staticData = data.ExecuteRequestGET(name, ctx);
-
-                return Task.FromResult(staticData.items);
+                return field;
             }
 
             void AddTypeField(ObjectGraphType ot, IGraphType t, string name)
@@ -195,7 +157,5 @@ namespace Assistant
                 query.Arguments.Add(new QueryArgument<IntGraphType> { Name = "offset", Description = "Number of items to skip." });
             }
         }
-
-        public object Executer { get; }
     }
 }
