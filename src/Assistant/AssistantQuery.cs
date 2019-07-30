@@ -81,15 +81,6 @@ namespace Assistant
 
                     return field;
                 }
-                else if (f.Name.Contains("createTask"))
-                {
-                    field.Resolver = new FuncFieldResolver<dynamic>(context =>
-                    {
-                        return data.AddTask(context);
-                    });
-
-                    return field;
-                }
                 else
                 {
                     field.Resolver = new FuncFieldResolver<Task<List<dynamic>>>(ctx =>
@@ -105,7 +96,7 @@ namespace Assistant
             {
                 dynamic response = new SimpleJson.JsonObject();
 
-                Task<dynamic> serverResponse = data.ExecuteRequest(name, ctx);
+                Task<dynamic> serverResponse = data.ExecuteRequestGET(name, ctx);
 
                 response.items = serverResponse.Result.items;
                 response.value = serverResponse.Result.value;
@@ -122,7 +113,7 @@ namespace Assistant
 
             Task<List<dynamic>> ReturnItems(string name, ResolveFieldContext ctx)
             {
-                dynamic staticData = data.ExecuteRequest(name, ctx);
+                dynamic staticData = data.ExecuteRequestGET(name, ctx);
 
                 return Task.FromResult(staticData.items);
             }

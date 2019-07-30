@@ -24,17 +24,27 @@ mutation{
             FieldType createTask = new FieldType();
             createTask.Name = "createTask";
             createTask.ResolvedType = data.schema.FindType("Task");
-            createTask.Arguments = new QueryArguments();
-            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "title", Description = "its title" });
-            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "description", Description = "its description" });
-            createTask.Arguments.Add(new QueryArgument<StringGraphType> { Name = "date", Description = "its date" });
-
-            createTask.Resolver = new FuncFieldResolver<dynamic>(context =>
-            {
-                return data.AddTask(context);
-            });
-
+            AddStandardCreateArguments(createTask);
             AddField(createTask);
+
+            FieldType createIssue = new FieldType();
+            createIssue.Name = "createIssue";
+            createIssue.ResolvedType = data.schema.FindType("Issue");
+            AddStandardCreateArguments(createIssue);
+            AddField(createIssue);
+
+            void AddStandardCreateArguments(FieldType t)
+            {
+                t.Arguments = new QueryArguments();
+                t.Arguments.Add(new QueryArgument<StringGraphType> { Name = "title", Description = "its title" });
+                t.Arguments.Add(new QueryArgument<StringGraphType> { Name = "description", Description = "its description" });
+                t.Arguments.Add(new QueryArgument<StringGraphType> { Name = "date", Description = "its date" });
+
+                t.Resolver = new FuncFieldResolver<dynamic>(context =>
+                {
+                    return data.ExecuteRequestPOST(t.Name, context);
+                });
+            }
         }
     }
 }

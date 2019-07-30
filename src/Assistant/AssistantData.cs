@@ -167,17 +167,18 @@ namespace Assistant
         {
             return Task.FromResult(issueTestList.FirstOrDefault(h => h.Id == id));
         }
-        public Task<dynamic> ExecuteRequest(string name, ResolveFieldContext ctx)
+
+        public async Task<dynamic> ExecuteRequestGET(string name, ResolveFieldContext ctx)
         {
             dynamic returnObj = new SimpleJson.JsonObject();
             string url = ResolveUrl(name, ctx);
             try
             {
-                HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url as string);
+                var webRequest = (HttpWebRequest)WebRequest.Create(url as string);
                 webRequest.ContentType = "application/json";
                 webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
                 webRequest.Headers.Add("X-UserName", "admin");
-                using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
+                using (WebResponse webResponse = await webRequest.GetResponseAsync())
                 {
                     // Get the stream associated with the response.
                     Stream receiveStream = webResponse.GetResponseStream();
@@ -186,16 +187,9 @@ namespace Assistant
                     // convert stream to JsonObject
                     dynamic response = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
 
-                    //test code
-                    if (response.ErrorCode != 0)
-                    {
-                        ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + response.ErrorCode + ". ErrorText: " + response.Data.ErrorText));
-                    }
+                    if (response.ErrorCode != 0) ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + response.ErrorCode + ". ErrorText: " + response.Data.ErrorText));
 
-                    if (response.Data.items == null)
-                    {
-                        response.Data.items = new List<SimpleJson.JsonObject>();
-                    }
+                    if (response.Data.items == null) response.Data.items = new List<SimpleJson.JsonObject>();
 
                     List<dynamic> items = new List<dynamic>();
 
@@ -228,7 +222,7 @@ namespace Assistant
                 ctx.Errors.Add(new GraphQL.ExecutionError(ex.Message.ToString()));
             }
 
-            return Task.FromResult(returnObj as object);
+            return Task.FromResult(returnObj as object).Result;
         }
 
         // constructs url with parameters if provided
@@ -239,11 +233,21 @@ namespace Assistant
             switch (name)
             {
                 case "issueState":
-                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/gitlab-connector/myissues?";
+                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/issues?";
                     break;
+
                 case "taskState":
                     url = "http://localhost:2014/api/adenin.GateKeeper.Connector/briefing/tasks?";
                     break;
+
+                case "createIssue":
+                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/poc-connector/issue-create";
+                    break;
+
+                case "createTask":
+                    url = "http://localhost:2014/api/adenin.GateKeeper.Connector/poc-connector/task-create";
+                    break;
+
                 default:
                     break;
             }
@@ -259,125 +263,92 @@ namespace Assistant
                 endDate = ctx.GetArgument<string>("enddate");
             }
 
-            if (ctx.HasArgument("first"))
-            {
-                first = ctx.GetArgument<int>("first");
-            }
+            if (ctx.HasArgument("first")) first = ctx.GetArgument<int>("first");
+            if (ctx.HasArgument("offset")) offset = ctx.GetArgument<int>("offset");
 
-            if (ctx.HasArgument("offset"))
-            {
-                offset = ctx.GetArgument<int>("offset");
-            }
-
-            if (startDate != "")
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "startDate=" + startDate;
-            }
-
-            if (endDate != "")
-            {
-                if (!url.EndsWith("?")) url += "&";
-                url += "endDate=" + endDate;
-            }
+            AppendParameter(ref url, "startDate", startDate);
+            AppendParameter(ref url, "endDate", endDate);
 
             int page = 0;
-            if (offset > 0)
-            {
-                page = offset / first;
-            }
+            if (offset > 0) page = offset / first;
 
             int pageSize = (offset + first) - (page * first);
             int waste = pageSize - first;
 
-            if (!url.EndsWith("?")) url += "&";
-            url += "page=" + page;
-
-            if (!url.EndsWith("?")) url += "&";
-            url += "pageSize=" + pageSize;
+            AppendParameter(ref url, "page", page.ToString());
+            AppendParameter(ref url, "pageSize", pageSize.ToString());
 
             return url;
         }
 
-        public Task<dynamic> AddTask(ResolveFieldContext ctx)
+        void AppendParameter(ref string url, string name, string value)
+        {
+            if (value != "" && value !="0")
+            {
+                if (!url.EndsWith("?")) url += "&";
+                url += name + "=" + value;
+            }
+        }
+
+        public async Task<dynamic> ExecuteRequestPOST(string name, ResolveFieldContext ctx)
         {
             string title = "";
             string description = "";
             string date = "";
 
-            if (ctx.HasArgument("title"))
-            {
-                title = ctx.GetArgument<string>("title");
-            }
+            if (ctx.HasArgument("title")) title = ctx.GetArgument<string>("title");
+            if (ctx.HasArgument("description")) description = ctx.GetArgument<string>("description");
+            if (ctx.HasArgument("date")) date = ctx.GetArgument<string>("date");
 
-            if (ctx.HasArgument("description"))
-            {
-                description = ctx.GetArgument<string>("description");
-            }
-
-            if (ctx.HasArgument("date"))
-            {
-                date = ctx.GetArgument<string>("date");
-            }
-
-            dynamic task = new SimpleJson.JsonObject();
-            task.id = Guid.NewGuid().ToString();
-            task.title = title;
-            task.description = description;
-            task.date = date;
+            dynamic item = new SimpleJson.JsonObject();
+            item.id = Guid.NewGuid().ToString();
+            item.title = title;
+            item.description = description;
+            item.date = date;
 
             // send post request to gitlab connector to create Issue
             try
             {
-                string url = "http://localhost:2014/api/adenin.GateKeeper.Connector/poc-connector/task-create";
+                string url = ResolveUrl(name, ctx);
                 HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
                 webRequest.Method = "POST";
                 webRequest.ContentType = "application/json";
                 webRequest.Headers.Add("X-ClusterKey", "srb6enxednjjeeutjkpq4donu55r7of1");
                 webRequest.Headers.Add("X-UserName", "admin");
 
-                string stringData = SimpleJson.SimpleJson.SerializeObject(task); //place body here
+                string stringData = SimpleJson.SimpleJson.SerializeObject(item); //place body here
                 var data = Encoding.ASCII.GetBytes(stringData); // or UTF8
                 webRequest.ContentLength = data.Length;
                 var newStream = webRequest.GetRequestStream();
                 newStream.Write(data, 0, data.Length);
                 newStream.Close();
 
-                using (HttpWebResponse response = webRequest.GetResponse() as HttpWebResponse)
+                using (HttpWebResponse response = await webRequest.GetResponseAsync() as HttpWebResponse)
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        // Get the stream associated with the response.
-                        Stream receiveStream = response.GetResponseStream();
-                        StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
 
-                        // convert stream to JsonObject
-                        dynamic res = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
+                    // Get the stream associated with the response.
+                    Stream receiveStream = response.GetResponseStream();
+                    StreamReader readStream = new StreamReader(receiveStream, Encoding.UTF8);
 
-                        response.Close();
-                        readStream.Close();
-                    }
+                    // convert stream to JsonObject
+                    dynamic res = SimpleJson.SimpleJson.DeserializeObject(readStream.ReadToEnd());
+
+                    if (res.ErrorCode != 0) ctx.Errors.Add(new GraphQL.ExecutionError("ErrorCode: " + res.ErrorCode + ". ErrorText: " + res.Data.ErrorText));
+
+                    response.Close();
+                    readStream.Close();
                 }
             }
             catch (WebException ex)
             {
-                using (var stream = ex.Response.GetResponseStream())
-                using (var reader = new StreamReader(stream))
-                {
-                    var z = reader.ReadToEnd();
-                    Console.WriteLine(z);
-                }
+                ctx.Errors.Add(new GraphQL.ExecutionError(ex.Message.ToString()));
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
-                // Something more serious happened
-                // like for example you don't have network access
-                // we cannot talk about a server exception here as
-                // the server probably was never reached
+                ctx.Errors.Add(new GraphQL.ExecutionError(ex.Message.ToString()));
             }
 
-            return Task.FromResult(task as object);
+            return Task.FromResult(item as object).Result;
         }
     }
 }
