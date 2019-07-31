@@ -4,6 +4,7 @@ using GraphQL.Resolvers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphQL.Conversion;
+using GraphQL;
 
 namespace Assistant
 {
@@ -55,10 +56,10 @@ namespace Assistant
             root.AddField(issueState);
 
 
-            data.schema.FieldNameConverter = new DefaultFieldNameConverter();
+
 
             var person = new ObjectGraphType { Name = "Person" };
-            AddTypeField(person, new StringGraphType(), "Name");
+            AddTypeField(person, new StringGraphType(), "NAME");
             data.schema.RegisterTypes(person);
 
             FieldType tmpQuery = new FieldType();

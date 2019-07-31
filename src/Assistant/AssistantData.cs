@@ -1,3 +1,4 @@
+using GraphQL.Conversion;
 using GraphQL.Types;
 using System;
 using System.Collections.Generic;
@@ -22,6 +23,7 @@ namespace Assistant
         public AssistantData()
         {
             schema = new Schema();
+            schema.FieldNameConverter = new DefaultFieldNameConverter();
 
             dynamic user1 = new SimpleJson.JsonObject();
             user1.id = "u1";
