@@ -11,6 +11,7 @@ using GraphQL.Validation;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Assistant;
+using GraphQL.Conversion;
 
 namespace Example
 {
@@ -63,6 +64,7 @@ namespace Example
                 _.UserContext = _settings.BuildUserContext?.Invoke(context);
                 _.ValidationRules = DocumentValidator.CoreRules().Concat(new [] { new InputValidationRule() });
                 _.EnableMetrics = _settings.EnableMetrics;
+                _.FieldNameConverter = new DefaultFieldNameConverter();
                 if (_settings.EnableMetrics)
                 {
                     _.FieldMiddleware.Use<InstrumentFieldsMiddleware>();

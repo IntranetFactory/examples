@@ -56,8 +56,6 @@ namespace Assistant
             root.AddField(issueState);
 
 
-
-
             var person = new ObjectGraphType { Name = "Person" };
             AddTypeField(person, new StringGraphType(), "NAME");
             data.schema.RegisterTypes(person);
